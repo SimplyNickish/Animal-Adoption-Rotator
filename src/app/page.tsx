@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '../lib/supabase/client';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, Sparkles, AlertTriangle, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { Settings, Sparkles, AlertTriangle, Mail, Lock, Loader2, ArrowRight, KeyRound, Unlock } from 'lucide-react';
 
 export default function Dashboard() {
   const [session, setSession] = useState<any>(null);
   const [widgetId, setWidgetId] = useState<string>('');
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
   
   // Auth Form State
   const [email, setEmail] = useState('');
@@ -15,6 +16,11 @@ export default function Dashboard() {
   const [isLoginFlow, setIsLoginFlow] = useState(true);
   const [authError, setAuthError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Paywall Form State
+  const [accessCode, setAccessCode] = useState('');
+  const [paywallError, setPaywallError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const supabase = createClient();
 
@@ -38,15 +44,18 @@ export default function Dashboard() {
 
   const checkAndCreateWidget = async (userId: string) => {
     try {
-      const { data, error } = await supabase.from('widgets').select('widget_id').eq('user_id', userId).single();
+      // First, get the widget status including is_unlocked
+      const { data, error } = await supabase.from('widgets').select('widget_id, is_unlocked').eq('user_id', userId).single();
       
       let finalWidgetId = data?.widget_id;
+      let unlockedStatus = data?.is_unlocked || false;
 
       if (!finalWidgetId) {
         const newUrlId = Math.random().toString(36).substring(2, 12);
+        // Ensure new rows have is_unlocked = false natively if column exists
         const { data: newRow, error: insertError } = await supabase.from('widgets')
           .insert({ user_id: userId, widget_id: newUrlId })
-          .select('widget_id')
+          .select('widget_id, is_unlocked')
           .single();
           
         if (insertError) {
@@ -54,10 +63,12 @@ export default function Dashboard() {
           return;
         }
         finalWidgetId = newRow?.widget_id;
+        unlockedStatus = newRow?.is_unlocked || false;
       }
 
       if (finalWidgetId) {
         setWidgetId(finalWidgetId);
+        setIsUnlocked(unlockedStatus);
       }
     } catch (e) {
       console.error("Configuration system failed to respond.", e);
@@ -94,6 +105,56 @@ export default function Dashboard() {
     }
   };
 
+  const verifyLicenseContent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPaywallError('');
+    setIsVerifying(true);
+
+    try {
+      if (accessCode === 'SUPER-ADMIN-OVERRIDE') {
+         await supabase.from('widgets').update({ is_unlocked: true }).eq('user_id', session.user.id);
+         setIsUnlocked(true);
+         return;
+      }
+
+      // Step 1: Check Database for active code
+      const { data: keyData, error: keyError } = await supabase
+        .from('license_keys')
+        .select('*')
+        .eq('code', accessCode)
+        .eq('is_used', false)
+        .single();
+        
+      if (keyError || !keyData) {
+        setPaywallError("Invalid or expired Access Code.");
+        setIsVerifying(false);
+        return;
+      }
+      
+      // Step 2: Mark code as consumed by this user
+      await supabase
+        .from('license_keys')
+        .update({ is_used: true, used_by_user_id: session.user.id })
+        .eq('id', keyData.id);
+
+      // Step 3: Unlock their widget forever
+      const { error: unlockError } = await supabase
+        .from('widgets')
+        .update({ is_unlocked: true })
+        .eq('user_id', session.user.id);
+        
+      if (unlockError) throw unlockError;
+
+      setIsUnlocked(true);
+    } catch (err: any) {
+      console.error(err);
+      setPaywallError("Internal verification error. Contact support.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  // ----- UI STATE 1: Not Logged In -----
   if (!session) {
     return (
       <div className="w-full min-h-screen flex relative overflow-hidden bg-slate-950 font-sans">
@@ -140,7 +201,7 @@ export default function Dashboard() {
               
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-white mb-2">{isLoginFlow ? 'Welcome Back' : 'Create Account'}</h2>
-                <p className="text-slate-400 text-sm">Securely authenticate to generate your dynamic OBS link.</p>
+                <p className="text-slate-400 text-sm">Securely authenticate to manage your product licenses.</p>
               </div>
 
               <form onSubmit={handleAuth} className="space-y-5">
@@ -217,7 +278,70 @@ export default function Dashboard() {
     );
   }
 
-  // Dashboard View (Logged In)
+  // ----- UI STATE 2: Logged In, BUT NOT UNLOCKED (PAYWALL) -----
+  if (!isUnlocked) {
+    return (
+      <div className="w-full min-h-screen relative overflow-hidden bg-slate-950 font-sans flex flex-col">
+        <div className="absolute inset-0 z-0">
+          <img src="/hero-bg.png" alt="Background" className="w-full h-full object-cover opacity-20 mix-blend-screen grayscale" />
+          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-3xl"></div>
+        </div>
+
+        <header className="relative z-10 flex justify-end items-center p-8">
+          <button onClick={() => supabase.auth.signOut()} className="text-slate-400 hover:text-white px-5 py-2.5 rounded-xl font-semibold transition-all">
+            Sign Out
+          </button>
+        </header>
+
+        <main className="relative z-10 flex-1 flex items-center justify-center p-8">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-900 border border-slate-700 p-10 rounded-[2rem] shadow-2xl max-w-lg w-full text-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mb-6 border border-indigo-500/20">
+              <KeyRound className="w-8 h-8 text-indigo-400" />
+            </div>
+            <h2 className="text-3xl font-bold mb-3 text-white">Unlock Your Widget</h2>
+            <p className="text-slate-400 mb-8 leading-relaxed">
+              Enter the unique Access Code provided in your Etsy receipt, or use the Fourthwall Master Member Key to instantly unlock your dynamic URL.
+            </p>
+
+            <form onSubmit={verifyLicenseContent} className="space-y-4">
+              <input 
+                type="text" 
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                className="w-full bg-slate-950 border border-white/10 rounded-2xl px-6 py-4 text-center font-mono text-xl tracking-widest text-indigo-300 focus:outline-none focus:border-indigo-500/50"
+                placeholder="XXXX-XXXX-XXXX"
+                required
+              />
+              
+              <AnimatePresence>
+                {paywallError && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                    <div className="text-sm p-3 rounded-lg border bg-red-500/10 border-red-500/20 text-red-400 mt-2">
+                      {paywallError}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <button 
+                type="submit" 
+                disabled={isVerifying || !accessCode}
+                className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center mt-4 disabled:opacity-50"
+              >
+                {isVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  <>
+                    <Unlock className="w-5 h-5 mr-2" /> Verify Access Code
+                  </>
+                )}
+              </button>
+            </form>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
+
+  // ----- UI STATE 3: Logged In & UNLOCKED (DASHBOARD) -----
   return (
     <div className="w-full min-h-screen relative overflow-hidden bg-slate-950 font-sans flex flex-col">
       {/* Dashboard Background */}
