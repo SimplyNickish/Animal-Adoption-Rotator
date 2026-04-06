@@ -460,17 +460,17 @@ function App() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }} 
           animate={{ opacity: 1, scale: 1 }} 
-          className="relative z-10 flex flex-col items-center bg-slate-900 border border-red-500/30 p-10 rounded-[2rem] shadow-[0_0_50px_rgba(239,68,68,0.2)] max-w-lg w-full text-center"
+          className="relative z-10 flex flex-col items-center bg-slate-900 border border-emerald-500/30 p-10 rounded-[2rem] shadow-[0_0_50px_rgba(16,185,129,0.2)] max-w-lg w-full text-center"
         >
-          <div className="mx-auto w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6 border border-red-500/20">
-            <ShieldAlert className="w-10 h-10 text-red-500" />
+          <div className="mx-auto w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-500/20">
+            <Sparkles className="w-10 h-10 text-emerald-500" />
           </div>
-          <h2 className="text-3xl font-bold mb-3 text-white">Stream Blocked</h2>
+          <h2 className="text-3xl font-bold mb-3 text-white">Widget Paused</h2>
           <p className="text-slate-400 mb-2 leading-relaxed">
-            Your connection to the Adoption Rotator network has been securely severed.
+            To continue using this asset, please reactivate your membership on our website!
           </p>
           <div className="bg-white/5 p-4 rounded-xl border border-white/10 mt-6 w-full text-sm text-slate-300 font-medium">
-            This URL requires an active License Key. Return to your master Dashboard to verify your account.
+            Once renewed, this overlay will instantly turn back on without you having to change any settings in OBS or Meld Studio.
           </div>
         </motion.div>
       </div>
