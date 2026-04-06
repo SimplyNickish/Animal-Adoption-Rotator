@@ -1,0 +1,5 @@
+{
+  "name": "Adoptable Dog Rotator",
+  "description": "A transparent broadcast overlay for OBS Studio that automatically cycles through adoptable dogs, complete with a chatbot API endpoint.",
+  "requestFramePermissions": []
+}
