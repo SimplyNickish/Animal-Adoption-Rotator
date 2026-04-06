@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '../lib/supabase/client';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, Sparkles, AlertTriangle, Mail, Lock, Loader2 } from 'lucide-react';
+import { Settings, Sparkles, AlertTriangle, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 
 export default function Dashboard() {
   const [session, setSession] = useState<any>(null);
@@ -84,7 +84,6 @@ export default function Dashboard() {
         if (error) {
           setAuthError(error.message);
         } else {
-          // Instruct user to check email if Supabase confirmation is active
           setAuthError("Success! If you don't instantly log in, please check your email for a confirmation link.");
         }
       }
@@ -97,127 +96,181 @@ export default function Dashboard() {
 
   if (!session) {
     return (
-      <div className="w-full min-h-screen flex flex-col items-center justify-center p-8 bg-slate-950">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900 p-8 pt-10 rounded-3xl w-full max-w-md border border-white/5 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-cyan-500"></div>
-          
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 mb-4">
-              <Sparkles className="w-8 h-8 text-emerald-400" />
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Live-Service Ecosystem</h1>
-            <p className="text-slate-400 text-sm">Create an account or login to access your dynamic widgets.</p>
-          </div>
+      <div className="w-full min-h-screen flex relative overflow-hidden bg-slate-950 font-sans">
+        {/* Cinematic Background */}
+        <div className="absolute inset-0 z-0">
+          <img src="/hero-bg.png" alt="Geometric Background" className="w-full h-full object-cover opacity-60 mix-blend-screen" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/40"></div>
+        </div>
 
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Email Address</label>
-              <div className="relative">
-                <Mail className="w-5 h-5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input 
-                  type="email" 
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-medium"
-                  placeholder="name@example.com"
-                  required
-                />
+        {/* Left Hero Content */}
+        <div className="relative z-10 w-full lg:w-3/5 flex flex-col justify-center p-12 lg:p-24 2xl:p-32">
+          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold text-sm mb-8 tracking-wide">
+              <Sparkles className="w-4 h-4" />
+              Now Out of Beta
+            </div>
+            <h1 className="text-5xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1] mb-8">
+              The <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Adoption Rotator</span>.
+              <br />Built for Creators.
+            </h1>
+            <p className="text-lg lg:text-xl text-slate-300 max-w-xl mb-12 leading-relaxed font-light">
+              Inject fully dynamic, beautifully animated animal adoption cards directly into your livestream. Built from the ground up to instantly integrate with OBS Studio using native global transparency.
+            </p>
+            <div className="flex gap-6">
+              <div className="flex flex-col">
+                <span className="text-3xl font-bold text-white mb-1">0%</span>
+                <span className="text-sm text-slate-400 uppercase tracking-wider font-semibold">CSS Required</span>
+              </div>
+              <div className="w-px bg-white/10"></div>
+              <div className="flex flex-col">
+                <span className="text-3xl font-bold text-white mb-1">10k+</span>
+                <span className="text-sm text-slate-400 uppercase tracking-wider font-semibold">Animals Saved</span>
               </div>
             </div>
+          </motion.div>
+        </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Password</label>
-              <div className="relative">
-                <Lock className="w-5 h-5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input 
-                  type="password" 
-                  autoComplete={isLoginFlow ? "current-password" : "new-password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-medium"
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                />
+        {/* Right Auth Portal */}
+        <div className="relative z-10 w-full lg:w-2/5 flex items-center justify-center p-8 lg:p-12 border-l border-white/5 bg-slate-950/40 backdrop-blur-3xl shadow-[-20px_0_40px_rgba(0,0,0,0.5)]">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="w-full max-w-sm">
+            <div className="bg-slate-900/80 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-cyan-500"></div>
+              
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-white mb-2">{isLoginFlow ? 'Welcome Back' : 'Create Account'}</h2>
+                <p className="text-slate-400 text-sm">Securely authenticate to generate your dynamic OBS link.</p>
               </div>
-            </div>
 
-            <AnimatePresence>
-              {authError && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                  <div className={`text-sm p-3 rounded-lg border ${authError.includes('Success') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-                    {authError}
+              <form onSubmit={handleAuth} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Email</label>
+                  <div className="relative">
+                    <Mail className="w-5 h-5 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input 
+                      type="email" 
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-slate-950/80 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-medium"
+                      placeholder="name@example.com"
+                      required
+                    />
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </div>
 
-            <button 
-              type="submit" 
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-slate-950 font-bold py-3 px-6 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] flex items-center justify-center mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLoginFlow ? 'Secure Login' : 'Create Account')}
-            </button>
-          </form>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Password</label>
+                  <div className="relative">
+                    <Lock className="w-5 h-5 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input 
+                      type="password" 
+                      autoComplete={isLoginFlow ? "current-password" : "new-password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-slate-950/80 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-medium"
+                      placeholder="••••••••"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                </div>
 
-          <div className="mt-6 text-center">
-            <button 
-              type="button"
-              onClick={() => { setIsLoginFlow(!isLoginFlow); setAuthError(''); }}
-              className="text-sm text-slate-400 hover:text-white transition-colors"
-            >
-              {isLoginFlow ? "Don't have an account? Sign up" : "Already have an account? Log in"}
-            </button>
-          </div>
-        </motion.div>
+                <AnimatePresence>
+                  {authError && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div className={`text-sm p-4 rounded-xl border mt-4 ${authError.includes('Success') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                        {authError}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="group w-full bg-white hover:bg-slate-100 text-slate-950 font-bold py-4 px-6 rounded-2xl transition-all flex items-center justify-center mt-4 disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                >
+                  {isLoading ? <Loader2 className="w-5 h-5 text-slate-900 animate-spin" /> : (
+                    <>
+                      {isLoginFlow ? 'Secure Login' : 'Create Account'}
+                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-8 text-center border-t border-white/5 pt-6">
+                <button 
+                  type="button"
+                  onClick={() => { setIsLoginFlow(!isLoginFlow); setAuthError(''); }}
+                  className="text-sm font-semibold text-slate-400 hover:text-white transition-colors flex items-center justify-center w-full"
+                >
+                  {isLoginFlow ? "New here? Create an account" : "Have an account? Log in"}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     );
   }
 
+  // Dashboard View (Logged In)
   return (
-    <div className="w-full h-full p-8 bg-slate-900 flex flex-col">
-      <header className="flex justify-between items-center mb-12">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Settings className="w-6 h-6 text-emerald-400" />
-          Widget Dashboard
+    <div className="w-full min-h-screen relative overflow-hidden bg-slate-950 font-sans flex flex-col">
+      {/* Dashboard Background */}
+      <div className="absolute inset-0 z-0">
+        <img src="/hero-bg.png" alt="Background" className="w-full h-full object-cover opacity-30 mix-blend-screen" />
+        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-3xl"></div>
+      </div>
+
+      <header className="relative z-10 flex justify-between items-center p-8 border-b border-white/5 bg-slate-900/50 backdrop-blur-md">
+        <h1 className="text-xl font-bold flex items-center gap-3 text-white">
+          <div className="p-2 bg-emerald-500/20 rounded-lg">
+            <Settings className="w-5 h-5 text-emerald-400" />
+          </div>
+          Adoption Rotator Dashboard
         </h1>
-        <button onClick={() => supabase.auth.signOut()} className="text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg font-medium">
+        <button onClick={() => supabase.auth.signOut()} className="text-slate-300 hover:text-white hover:bg-white/10 px-5 py-2.5 rounded-xl font-semibold transition-all">
           Sign Out
         </button>
       </header>
 
-      <main className="flex-1">
-        <div className="bg-slate-800 p-8 rounded-3xl border border-white/5 shadow-2xl max-w-3xl">
-          <h2 className="text-xl font-semibold mb-2 text-white">Your Streaming URL</h2>
-          <p className="text-slate-400 mb-8">Add this precise URL to OBS Studio as a "Browser Source".</p>
+      <main className="relative z-10 flex-1 flex items-center justify-center p-8">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-900/80 backdrop-blur-2xl p-10 lg:p-14 rounded-[2rem] border border-white/10 shadow-2xl max-w-4xl w-full">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl lg:text-4xl font-extrabold mb-4 text-white">Your Live URL is Ready</h2>
+            <p className="text-lg text-slate-400">Copy this secure endpoint and paste it into OBS Studio as a <span className="font-semibold text-white">Browser Source</span>.</p>
+          </div>
           
-          <div className="flex gap-4 items-center">
-            <div className="flex-1 relative">
-               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 blur-xl opacity-50 rounded-xl"></div>
+          <div className="flex flex-col lg:flex-row gap-6 items-center">
+            <div className="flex-1 w-full relative group">
+               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-cyan-500/30 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
                <input 
                  type="text" 
                  readOnly 
                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/widget/${widgetId}`}
-                 className="relative w-full bg-slate-950 border border-white/10 rounded-xl px-5 py-4 font-mono text-emerald-400 shadow-inner focus:outline-none"
+                 className="relative w-full bg-slate-950/90 border border-emerald-500/30 rounded-2xl px-6 py-5 font-mono text-emerald-300 shadow-inner focus:outline-none text-lg lg:text-xl"
                />
             </div>
             <button 
               onClick={() => navigator.clipboard.writeText(`${window.location.origin}/widget/${widgetId}`)}
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-4 px-8 rounded-xl transition-colors shadow-lg shrink-0"
+              className="w-full lg:w-auto bg-gradient-to-b from-emerald-400 to-emerald-500 hover:from-emerald-300 hover:to-emerald-400 text-slate-950 font-extrabold py-5 px-10 rounded-2xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] shrink-0 text-lg"
             >
-              Copy URL
+              Copy Asset URL
             </button>
           </div>
 
-          <div className="mt-8 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-start gap-4">
-            <AlertTriangle className="w-6 h-6 text-indigo-400 shrink-0 mt-0.5" />
-            <div className="text-sm text-indigo-200/80 leading-relaxed font-medium">
-              This widget ecosystem dynamically enforces background transparency on all endpoints. You do not need to inject custom CSS into OBS; simply paste the URL above and crop visually.
+          <div className="mt-12 p-6 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-start gap-5">
+            <AlertTriangle className="w-8 h-8 text-cyan-400 shrink-0" />
+            <div className="text-cyan-100/80 text-base leading-relaxed font-medium">
+              <strong className="text-cyan-300 block mb-1">Global Transparency Enabled</strong>
+              The architecture dynamically enforces background layer isolation. You do not need to inject custom Alpha CSS into OBS—simply paste the URL and place the layer over your camera feed.
             </div>
           </div>
-        </div>
+        </motion.div>
       </main>
     </div>
   );
