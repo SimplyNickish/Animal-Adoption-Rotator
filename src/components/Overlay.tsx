@@ -2,9 +2,10 @@
 import React, { useEffect, useState, Component, ErrorInfo, ReactNode, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, Heart, Info, Sparkles, Settings, X, SearchX, MessageSquare, AlertTriangle } from 'lucide-react';
+import { MapPin, Heart, Info, Sparkles, Settings, X, SearchX, MessageSquare, AlertTriangle, ShieldAlert } from 'lucide-react';
 import tmi from 'tmi.js';
 import { Animal, fetchAllAnimals } from '../lib/api';
+import { createClient } from '../lib/supabase/client';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -66,6 +67,7 @@ export default function AppWrapper() {
 
 function App() {
   const [animals, setAnimals] = useState<Animal[]>([]);
+  const [accessState, setAccessState] = useState<'verifying' | 'unlocked' | 'locked'>('verifying');
   const [currentIndex, setCurrentIndex] = useState(0);
   
   const currentAnimal = animals[currentIndex] || null;
@@ -111,6 +113,40 @@ function App() {
   useEffect(() => {
     currentIndexRef.current = currentIndex;
   }, [currentIndex]);
+
+  // Verify License/Subscription from Supabase based on Widget URL
+  useEffect(() => {
+    const verifyAccess = async () => {
+      try {
+        const urlParts = window.location.pathname.split('/');
+        // e.g. /widget/abc123xyz
+        const urlWidgetId = urlParts[urlParts.length - 1];
+        
+        if (!urlWidgetId || urlWidgetId === 'widget') {
+          // If viewing generic path (though router should prevent this)
+          setAccessState('locked');
+          return;
+        }
+
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('widgets')
+          .select('is_unlocked')
+          .eq('widget_id', urlWidgetId)
+          .single();
+
+        if (error || !data || !data.is_unlocked) {
+          setAccessState('locked');
+        } else {
+          setAccessState('unlocked');
+        }
+      } catch (err) {
+        setAccessState('locked');
+      }
+    };
+    
+    verifyAccess();
+  }, []);
 
   // Initialize from URL or LocalStorage
   useEffect(() => {
@@ -408,6 +444,38 @@ function App() {
       setIsLoading(true);
     }
   };
+
+  // OBS KILL SWITCH: Securely blocks stream access if subscription/license is invalid
+  if (accessState === 'verifying') {
+    return <div className="w-screen h-screen bg-transparent" />; // Wait completely invisibly in OBS
+  }
+
+  if (accessState === 'locked') {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-slate-950 p-12 overflow-hidden relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/hero-bg.png" alt="Background" className="w-full h-full object-cover opacity-10 mix-blend-screen grayscale" />
+          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-3xl"></div>
+        </div>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }} 
+          animate={{ opacity: 1, scale: 1 }} 
+          className="relative z-10 flex flex-col items-center bg-slate-900 border border-red-500/30 p-10 rounded-[2rem] shadow-[0_0_50px_rgba(239,68,68,0.2)] max-w-lg w-full text-center"
+        >
+          <div className="mx-auto w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6 border border-red-500/20">
+            <ShieldAlert className="w-10 h-10 text-red-500" />
+          </div>
+          <h2 className="text-3xl font-bold mb-3 text-white">Stream Blocked</h2>
+          <p className="text-slate-400 mb-2 leading-relaxed">
+            Your connection to the Adoption Rotator network has been securely severed.
+          </p>
+          <div className="bg-white/5 p-4 rounded-xl border border-white/10 mt-6 w-full text-sm text-slate-300 font-medium">
+            This URL requires an active License Key. Return to your master Dashboard to verify your account.
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-screen h-screen flex items-center justify-center p-12 overflow-hidden relative group">
