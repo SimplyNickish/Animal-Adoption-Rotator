@@ -12,12 +12,7 @@ export interface Animal {
   description?: string;
 }
 
-export async function fetchRescueGroups(apiKey: string, animalType: string, locationFilter: string, rotationSize: number): Promise<Animal[]> {
-  if (!apiKey) {
-    console.error("No RescueGroups API key provided.");
-    return [];
-  }
-
+export async function fetchRescueGroups(animalType: string, locationFilter: string, rotationSize: number): Promise<Animal[]> {
   let apiFilters: any[] = [];
   if (locationFilter) {
     const loc = locationFilter.trim();
@@ -28,22 +23,21 @@ export async function fetchRescueGroups(apiKey: string, animalType: string, loca
     }
   }
 
-  const fetchOptions: RequestInit = {
-    method: 'POST',
-    headers: {
-      'Authorization': apiKey,
-      'Content-Type': 'application/vnd.api+json'
-    },
-    body: JSON.stringify({ data: { filters: apiFilters } })
-  };
-
   const fetchType = async (endpoint: string, type: 'dog' | 'cat') => {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
       
-      const response = await fetch(`https://api.rescuegroups.org/v5/public/animals/search/available/${endpoint}?include=pictures,orgs,locations,breeds&limit=${rotationSize}`, {
-        ...fetchOptions,
+      const response = await fetch('/api/rescuegroups', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          endpoint,
+          rotationSize,
+          filters: apiFilters
+        }),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
@@ -260,8 +254,7 @@ export async function fetchAllAnimals(
   locationFilter: string, 
   rotationSize: number
 ): Promise<Animal[]> {
-  const apiKey = process.env.NEXT_PUBLIC_RESCUE_GROUPS_API_KEY || '';
-  const cacheId = `global_${animalType}_${locationFilter}_${rotationSize}_${apiKey}`;
+  const cacheId = `global_${animalType}_${locationFilter}_${rotationSize}`;
   
   try {
     const cached = localStorage.getItem(CACHE_KEY);
@@ -286,9 +279,7 @@ export async function fetchAllAnimals(
     promises.push(fetchRssFeed('https://www.dogsblog.com/feed/', 'dogsblog', 'UK', 'dog'));
   }
 
-  if (apiKey) {
-    promises.push(fetchRescueGroups(apiKey, animalType, locationFilter, rotationSize));
-  }
+  promises.push(fetchRescueGroups(animalType, locationFilter, rotationSize));
 
   const results = await Promise.allSettled(promises);
   results.forEach(result => {

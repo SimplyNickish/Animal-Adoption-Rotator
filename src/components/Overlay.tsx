@@ -6,6 +6,7 @@ import { MapPin, Heart, Info, Sparkles, Settings, X, SearchX, MessageSquare, Ale
 import tmi from 'tmi.js';
 import { Animal, fetchAllAnimals } from '../lib/api';
 import { createClient } from '../lib/supabase/client';
+import { useWidgetSettings, WidgetSettings } from '../lib/useWidgetSettings';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -78,28 +79,16 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
-  // Settings State
-  const [locationInput, setLocationInput] = useState('');
-  const [animalTypeInput, setAnimalTypeInput] = useState('both');
-  const [displayDurationInput, setDisplayDurationInput] = useState('60');
-  const [rotationSizeInput, setRotationSizeInput] = useState('50');
-  const [twitchChannelInput, setTwitchChannelInput] = useState('');
-  const [twitchBotUsernameInput, setTwitchBotUsernameInput] = useState('');
-  const [twitchBotTokenInput, setTwitchBotTokenInput] = useState('');
-  const [botIntegrationInput, setBotIntegrationInput] = useState<'none' | 'twitch' | 'streamerbot'>('none');
-  const [streamerbotUrlInput, setStreamerbotUrlInput] = useState('ws://127.0.0.1:8080/');
+  const [widgetId, setWidgetId] = useState<string | null>(null);
 
-  // Active Settings (applied)
-  const [activeLocation, setActiveLocation] = useState('');
-  const [activeAnimalType, setActiveAnimalType] = useState('both');
-  const [activeDisplayDuration, setActiveDisplayDuration] = useState(60);
-  const [activeRotationSize, setActiveRotationSize] = useState(50);
-  const [activeTwitchChannel, setActiveTwitchChannel] = useState('');
-  const [activeTwitchBotUsername, setActiveTwitchBotUsername] = useState('');
-  const [activeTwitchBotToken, setActiveTwitchBotToken] = useState('');
-  const [activeBotIntegration, setActiveBotIntegration] = useState<'none' | 'twitch' | 'streamerbot'>('none');
-  const [activeStreamerbotUrl, setActiveStreamerbotUrl] = useState('ws://127.0.0.1:8080/');
+  const { settings, updateSettings, isReady } = useWidgetSettings(widgetId);
+  const [localSettings, setLocalSettings] = useState<WidgetSettings>(settings);
+
+  useEffect(() => {
+    if (isReady) {
+      setLocalSettings(settings);
+    }
+  }, [settings, isReady]);
 
   const twitchClientRef = useRef<tmi.Client | null>(null);
   const sbWsRef = useRef<WebSocket | null>(null);
@@ -119,7 +108,6 @@ function App() {
     const verifyAccess = async () => {
       try {
         const urlParts = window.location.pathname.split('/');
-        // e.g. /widget/abc123xyz
         const urlWidgetId = urlParts[urlParts.length - 1];
         
         if (!urlWidgetId || urlWidgetId === 'widget') {
@@ -127,8 +115,11 @@ function App() {
           return;
         }
 
+        // Apply widgetId globally to begin mapping Realtime Remote Control sync
+        setWidgetId(urlWidgetId);
+
         // 1. MASTER MEMBERSHIP BYPASS
-        if (urlWidgetId === 'MEMBERS-MASTER') {
+        if (urlWidgetId.startsWith('MEMBERS-')) {
           setAccessState('unlocked');
           return;
         }
@@ -160,89 +151,18 @@ function App() {
     verifyAccess();
   }, []);
 
-  // Initialize from URL or LocalStorage
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    
-    const getVal = (key: string, defaultVal: string) => {
-      const urlVal = searchParams.get(key);
-      if (urlVal !== null) return urlVal;
-      const lsVal = localStorage.getItem(`pet_overlay_${key}`);
-      if (lsVal !== null) return lsVal;
-      return defaultVal;
-    };
-
-    const loc = getVal('location', '');
-    const type = getVal('animalType', 'both');
-    
-    const durationRaw = parseInt(getVal('displayDuration', '60'));
-    const duration = isNaN(durationRaw) || durationRaw < 10 ? 60 : durationRaw;
-    
-    const limitRaw = parseInt(getVal('rotationSize', '50'));
-    const limit = isNaN(limitRaw) || limitRaw < 1 ? 50 : limitRaw;
-    
-    const twitch = getVal('twitchChannel', '');
-    const botUser = getVal('twitchBotUsername', '');
-    const botToken = getVal('twitchBotToken', '');
-    const botInt = getVal('botIntegration', 'none') as any;
-    const sbUrl = getVal('streamerbotUrl', 'ws://127.0.0.1:8080/');
-
-    setLocationInput(loc);
-    setActiveLocation(loc);
-    
-    setAnimalTypeInput(type);
-    setActiveAnimalType(type);
-
-    setDisplayDurationInput(duration.toString());
-    setActiveDisplayDuration(duration);
-
-    setRotationSizeInput(limit.toString());
-    setActiveRotationSize(limit);
-
-    setTwitchChannelInput(twitch);
-    setActiveTwitchChannel(twitch);
-
-    setTwitchBotUsernameInput(botUser);
-    setActiveTwitchBotUsername(botUser);
-
-    setTwitchBotTokenInput(botToken);
-    setActiveTwitchBotToken(botToken);
-
-    setBotIntegrationInput(botInt);
-    setActiveBotIntegration(botInt);
-
-    setStreamerbotUrlInput(sbUrl);
-    setActiveStreamerbotUrl(sbUrl);
-  }, []);
-
-  // Update URL when any active setting changes
-  useEffect(() => {
-    const searchParams = new URLSearchParams();
-    if (activeLocation) searchParams.set('location', activeLocation);
-    searchParams.set('animalType', activeAnimalType);
-    searchParams.set('displayDuration', activeDisplayDuration.toString());
-    searchParams.set('rotationSize', activeRotationSize.toString());
-    if (activeTwitchChannel) searchParams.set('twitchChannel', activeTwitchChannel.replace('#', '').trim());
-    if (activeTwitchBotUsername) searchParams.set('twitchBotUsername', activeTwitchBotUsername.trim());
-    if (activeTwitchBotToken) searchParams.set('twitchBotToken', activeTwitchBotToken.trim());
-    if (activeBotIntegration !== 'none') searchParams.set('botIntegration', activeBotIntegration);
-    if (activeStreamerbotUrl !== 'ws://127.0.0.1:8080/') searchParams.set('streamerbotUrl', activeStreamerbotUrl.trim());
-    
-    // Update URL so it can be copied if needed
-    const newUrl = window.location.pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
-    window.history.replaceState({}, '', newUrl);
-  }, [activeLocation, activeAnimalType, activeDisplayDuration, activeRotationSize, activeTwitchChannel, activeTwitchBotUsername, activeTwitchBotToken, activeBotIntegration, activeStreamerbotUrl]);
-
   // Fetch Animals
   useEffect(() => {
+    if (!isReady) return; // Wait for initial settings sync
+
     let isMounted = true;
     setIsLoading(true);
     setNoAnimalsFound(false);
 
     fetchAllAnimals(
-      activeAnimalType,
-      activeLocation,
-      activeRotationSize
+      settings.animalType,
+      settings.location,
+      parseInt(settings.rotationSize) || 50
     ).then((fetchedAnimals) => {
       if (!isMounted) return;
       if (fetchedAnimals.length === 0) {
@@ -266,22 +186,25 @@ function App() {
     return () => {
       isMounted = false;
     };
-  }, [activeLocation, activeAnimalType, activeRotationSize]);
+  }, [settings.location, settings.animalType, settings.rotationSize, isReady]);
 
   // Rotation Timer
   useEffect(() => {
     if (animals.length <= 1) return;
+    const durationRaw = parseInt(settings.displayDuration);
+    const duration = isNaN(durationRaw) || durationRaw < 10 ? 60 : durationRaw;
+    
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % animals.length);
       setPictureIndex(0);
-    }, activeDisplayDuration * 1000);
+    }, duration * 1000);
     return () => clearInterval(timer);
-  }, [animals, activeDisplayDuration]);
+  }, [animals, settings.displayDuration]);
 
   // Streamer.bot Connection
   useEffect(() => {
-    if (activeBotIntegration === 'streamerbot' && activeStreamerbotUrl) {
-      const ws = new WebSocket(activeStreamerbotUrl);
+    if (settings.botIntegration === 'streamerbot' && settings.streamerbotUrl) {
+      const ws = new WebSocket(settings.streamerbotUrl);
       
       ws.onopen = () => {
         console.log('Connected to Streamer.bot');
@@ -298,11 +221,11 @@ function App() {
         sbWsRef.current = null;
       };
     }
-  }, [activeBotIntegration, activeStreamerbotUrl]);
+  }, [settings.botIntegration, settings.streamerbotUrl]);
 
   // Twitch Connection
   useEffect(() => {
-    if (!activeTwitchChannel) {
+    if (!settings.twitchChannel) {
       if (twitchClientRef.current) {
         twitchClientRef.current.disconnect();
         twitchClientRef.current = null;
@@ -310,16 +233,16 @@ function App() {
       return;
     }
 
-    const channel = activeTwitchChannel.replace('#', '').trim().toLowerCase();
+    const channel = settings.twitchChannel.replace('#', '').trim().toLowerCase();
     
     const clientOptions: tmi.Options = {
       channels: [`#${channel}`]
     };
 
-    if (activeBotIntegration === 'twitch' && activeTwitchBotUsername && activeTwitchBotToken) {
+    if (settings.botIntegration === 'twitch' && settings.twitchBotUsername && settings.twitchBotToken) {
       clientOptions.identity = {
-        username: activeTwitchBotUsername,
-        password: activeTwitchBotToken
+        username: settings.twitchBotUsername,
+        password: settings.twitchBotToken
       };
     }
 
@@ -361,14 +284,14 @@ function App() {
         }
 
         const sendReply = (replyMessage: string) => {
-          if (activeBotIntegration === 'streamerbot' && sbWsRef.current?.readyState === WebSocket.OPEN) {
+          if (settings.botIntegration === 'streamerbot' && sbWsRef.current?.readyState === WebSocket.OPEN) {
             sbWsRef.current.send(JSON.stringify({
               request: "SendMessage",
               platform: "twitch",
               message: replyMessage,
               id: `msg_${Date.now()}`
             }));
-          } else if (activeBotIntegration === 'twitch') {
+          } else if (settings.botIntegration === 'twitch') {
             client.say(ch, replyMessage).catch((e) => {
               console.warn('Could not send Twitch message (bot not authenticated)', e);
             });
@@ -396,7 +319,7 @@ function App() {
       client.disconnect();
       twitchClientRef.current = null;
     };
-  }, [activeTwitchChannel, activeTwitchBotUsername, activeTwitchBotToken, activeBotIntegration]);
+  }, [settings.twitchChannel, settings.twitchBotUsername, settings.twitchBotToken, settings.botIntegration]);
 
   useEffect(() => {
     if (!currentAnimal || !currentAnimal.pictures || currentAnimal.pictures.length <= 1) return;
@@ -409,52 +332,10 @@ function App() {
     return () => clearInterval(interval);
   }, [currentAnimal]);
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const parsedDuration = parseInt(displayDurationInput);
-    const finalDuration = isNaN(parsedDuration) || parsedDuration < 10 ? 60 : parsedDuration;
-    
-    const parsedRotation = parseInt(rotationSizeInput);
-    const finalRotation = isNaN(parsedRotation) || parsedRotation < 1 ? 50 : parsedRotation;
-
-    const needsRefetch = 
-      activeLocation !== locationInput.trim() ||
-      activeAnimalType !== animalTypeInput ||
-      activeRotationSize !== finalRotation;
-
-    setActiveLocation(locationInput.trim());
-    setActiveAnimalType(animalTypeInput);
-    setActiveDisplayDuration(finalDuration);
-    setActiveRotationSize(finalRotation);
-    setActiveTwitchChannel(twitchChannelInput.trim());
-    setActiveTwitchBotUsername(twitchBotUsernameInput.trim());
-    setActiveTwitchBotToken(twitchBotTokenInput.trim());
-    setActiveBotIntegration(botIntegrationInput);
-    setActiveStreamerbotUrl(streamerbotUrlInput.trim());
-    
-    // Save to LocalStorage
-    localStorage.setItem('pet_overlay_location', locationInput.trim());
-    localStorage.setItem('pet_overlay_animalType', animalTypeInput);
-    localStorage.setItem('pet_overlay_displayDuration', finalDuration.toString());
-    localStorage.setItem('pet_overlay_rotationSize', finalRotation.toString());
-    localStorage.setItem('pet_overlay_twitchChannel', twitchChannelInput.trim());
-    localStorage.setItem('pet_overlay_twitchBotUsername', twitchBotUsernameInput.trim());
-    localStorage.setItem('pet_overlay_twitchBotToken', twitchBotTokenInput.trim());
-    localStorage.setItem('pet_overlay_botIntegration', botIntegrationInput);
-    localStorage.setItem('pet_overlay_streamerbotUrl', streamerbotUrlInput.trim());
-    
-    // Update inputs to match validated values
-    setDisplayDurationInput(finalDuration.toString());
-    setRotationSizeInput(finalRotation.toString());
-    
+    await updateSettings(localSettings);
     setIsSettingsOpen(false);
-    
-    if (needsRefetch) {
-      setAnimals([]); // Clear current animals while loading new settings
-      setNoAnimalsFound(false);
-      setIsLoading(true);
-    }
   };
 
   // OBS KILL SWITCH: Securely blocks stream access if subscription/license is invalid
@@ -523,8 +404,8 @@ function App() {
                 </label>
                 <input
                   type="text"
-                  value={locationInput}
-                  onChange={(e) => setLocationInput(e.target.value)}
+                  value={localSettings.location}
+                  onChange={(e) => setLocalSettings({...localSettings, location: e.target.value})}
                   placeholder="Zip, City, or State..."
                   className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
                 />
@@ -535,8 +416,8 @@ function App() {
                   Animal Type
                 </label>
                 <select
-                  value={animalTypeInput}
-                  onChange={(e) => setAnimalTypeInput(e.target.value)}
+                  value={localSettings.animalType}
+                  onChange={(e) => setLocalSettings({...localSettings, animalType: e.target.value})}
                   className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors"
                 >
                   <option value="dogs" className="bg-slate-900 text-white">Dogs Only</option>
@@ -553,8 +434,8 @@ function App() {
                   <input
                     type="number"
                     min="10"
-                    value={displayDurationInput}
-                    onChange={(e) => setDisplayDurationInput(e.target.value)}
+                    value={localSettings.displayDuration}
+                    onChange={(e) => setLocalSettings({...localSettings, displayDuration: e.target.value})}
                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors"
                   />
                 </div>
@@ -566,8 +447,8 @@ function App() {
                     type="number"
                     min="1"
                     max="200"
-                    value={rotationSizeInput}
-                    onChange={(e) => setRotationSizeInput(e.target.value)}
+                    value={localSettings.rotationSize}
+                    onChange={(e) => setLocalSettings({...localSettings, rotationSize: e.target.value})}
                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors"
                   />
                 </div>
@@ -579,8 +460,8 @@ function App() {
                 </label>
                 <input
                   type="text"
-                  value={twitchChannelInput}
-                  onChange={(e) => setTwitchChannelInput(e.target.value)}
+                  value={localSettings.twitchChannel}
+                  onChange={(e) => setLocalSettings({...localSettings, twitchChannel: e.target.value})}
                   placeholder="e.g. ninja"
                   className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
                 />
@@ -592,8 +473,8 @@ function App() {
                   Bot Integration
                 </label>
                 <select
-                  value={botIntegrationInput}
-                  onChange={(e) => setBotIntegrationInput(e.target.value as any)}
+                  value={localSettings.botIntegration}
+                  onChange={(e) => setLocalSettings({...localSettings, botIntegration: e.target.value as any})}
                   className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors"
                 >
                   <option value="none" className="bg-slate-900 text-white">None (Overlay Only)</option>
@@ -602,15 +483,15 @@ function App() {
                 </select>
               </div>
 
-              {botIntegrationInput === 'streamerbot' && (
+              {localSettings.botIntegration === 'streamerbot' && (
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1">
                     Streamer.bot WebSocket URL
                   </label>
                   <input
                     type="text"
-                    value={streamerbotUrlInput}
-                    onChange={(e) => setStreamerbotUrlInput(e.target.value)}
+                    value={localSettings.streamerbotUrl}
+                    onChange={(e) => setLocalSettings({...localSettings, streamerbotUrl: e.target.value})}
                     placeholder="ws://127.0.0.1:8080/"
                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
                   />
@@ -618,7 +499,7 @@ function App() {
                 </div>
               )}
 
-              {botIntegrationInput === 'twitch' && (
+              {localSettings.botIntegration === 'twitch' && (
                 <>
                   <div className="flex gap-4">
                     <div className="w-1/2">
@@ -627,8 +508,8 @@ function App() {
                       </label>
                       <input
                         type="text"
-                        value={twitchBotUsernameInput}
-                        onChange={(e) => setTwitchBotUsernameInput(e.target.value)}
+                        value={localSettings.twitchBotUsername}
+                        onChange={(e) => setLocalSettings({...localSettings, twitchBotUsername: e.target.value})}
                         placeholder="e.g. mybot"
                         className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
                       />
@@ -639,8 +520,8 @@ function App() {
                       </label>
                       <input
                         type="password"
-                        value={twitchBotTokenInput}
-                        onChange={(e) => setTwitchBotTokenInput(e.target.value)}
+                        value={localSettings.twitchBotToken}
+                        onChange={(e) => setLocalSettings({...localSettings, twitchBotToken: e.target.value})}
                         placeholder="oauth:..."
                         className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
                       />
@@ -681,13 +562,13 @@ function App() {
               <div className="flex flex-col items-center bg-black/60 p-8 rounded-3xl backdrop-blur-md border border-white/10 shadow-2xl">
                 <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mb-4" />
                 <div className="text-xl animate-pulse text-white">
-                  {activeLocation ? `Searching for animals near ${activeLocation}...` : 'Loading animals...'}
+                  {settings.location ? `Searching for animals near ${settings.location}...` : 'Loading animals...'}
                 </div>
               </div>
             ) : noAnimalsFound ? (
               <div className="flex flex-col items-center bg-black/60 p-8 rounded-3xl backdrop-blur-md border border-white/10 shadow-2xl">
                 <SearchX className="w-12 h-12 mb-4 text-white/50" />
-                <div className="text-xl text-white">No animals found near {activeLocation}</div>
+                <div className="text-xl text-white">No animals found near {settings.location}</div>
                 <div className="text-sm mt-2 text-white/50">Try a different location or animal type</div>
               </div>
             ) : null}
@@ -811,8 +692,8 @@ function App() {
               <div className="mt-10 pt-8 border-t border-white/10 flex items-center gap-8 relative z-10">
                 <div className="relative group">
                   <div className="absolute -inset-2 bg-emerald-400/30 rounded-3xl blur-xl group-hover:bg-emerald-400/40 transition-colors duration-500" />
-                  <div className="relative bg-white p-3.5 rounded-2xl shrink-0 shadow-[0_10px_20px_rgba(0,0,0,0.3)] ring-1 ring-black/5">
-                    <QRCodeSVG value={currentAnimal.url || 'https://rescuegroups.org'} size={100} level="H" className="drop-shadow-sm" />
+                  <div className="relative bg-white p-3.5 rounded-2xl shrink-0 shadow-[0_10px_20px_rgba(0,0,0,0.3)] ring-1 ring-black/5 w-24 h-24 sm:w-32 sm:h-32">
+                    <QRCodeSVG value={currentAnimal.url || 'https://rescuegroups.org'} style={{ width: '100%', height: 'auto' }} level="H" className="drop-shadow-sm" />
                   </div>
                 </div>
                 <div>
