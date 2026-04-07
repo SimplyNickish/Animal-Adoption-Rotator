@@ -123,23 +123,35 @@ function App() {
         const urlWidgetId = urlParts[urlParts.length - 1];
         
         if (!urlWidgetId || urlWidgetId === 'widget') {
-          // If viewing generic path (though router should prevent this)
           setAccessState('locked');
           return;
         }
 
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from('widgets')
-          .select('is_unlocked')
-          .eq('widget_id', urlWidgetId)
-          .single();
-
-        if (error || !data || !data.is_unlocked) {
-          setAccessState('locked');
-        } else {
+        // 1. MASTER MEMBERSHIP BYPASS
+        if (urlWidgetId === 'MEMBERS-MASTER') {
           setAccessState('unlocked');
+          return;
         }
+
+        // 2. LIFETIME ETSY VOUCHER VALIDATION
+        if (urlWidgetId.startsWith('LIFETIME-')) {
+          const etsyCode = urlWidgetId.replace('LIFETIME-', '');
+          const supabase = createClient();
+          const { data, error } = await supabase
+            .from('license_keys')
+            .select('is_used')
+            .eq('code', etsyCode)
+            .single();
+
+          if (!error && data && data.is_used) {
+            setAccessState('unlocked');
+            return;
+          }
+        }
+
+        // 3. SECURE FALLBACK 
+        setAccessState('locked');
+        
       } catch (err) {
         setAccessState('locked');
       }
