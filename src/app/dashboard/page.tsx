@@ -75,6 +75,23 @@ export default function EmbeddedDashboard() {
     }
   }, []);
 
+  // Tell Fourthwall parent frame how tall we are so it doesn't clip
+  useEffect(() => {
+    const sendHeight = () => {
+      try {
+        const height = document.documentElement.scrollHeight;
+        window.parent.postMessage({ type: 'RESIZE', data: { height } }, '*');
+      } catch (_) {}
+    };
+    // Send on load and whenever DOM changes
+    sendHeight();
+    const observer = new MutationObserver(sendHeight);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+    // Also re-send periodically for animation settling
+    const interval = setInterval(sendHeight, 1000);
+    return () => { observer.disconnect(); clearInterval(interval); };
+  }, [isUnlocked, isReady]);
+
   const verifyLicenseContent = async (e: React.FormEvent) => {
     e.preventDefault();
     setPaywallError('');
@@ -169,12 +186,20 @@ export default function EmbeddedDashboard() {
 
   const executeCopy = () => {
     const url = `${WIDGET_BASE}/widget/${widgetId}`;
-    if (!navigator.clipboard) {
-      fallbackCopyTextToClipboard(url);
+    
+    // Try modern clipboard API first
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url)
+        .then(() => { setCopySuccess(true); })
+        .catch(() => {
+          // Fallback: execCommand
+          fallbackCopyTextToClipboard(url);
+          setCopySuccess(true);
+        });
     } else {
-      navigator.clipboard.writeText(url).catch(() => fallbackCopyTextToClipboard(url));
+      fallbackCopyTextToClipboard(url);
+      setCopySuccess(true);
     }
-    setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
   };
 
