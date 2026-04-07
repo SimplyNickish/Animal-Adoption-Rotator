@@ -101,48 +101,73 @@ export default function EmbeddedDashboard() {
   // ----- UI STATE: NO ACCESS CODE PROVIDED -----
   if (!isUnlocked) {
     return (
-      <div className="w-full bg-transparent font-sans flex flex-col justify-center items-center py-8 px-4">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/80 backdrop-blur-xl border border-emerald-500/30 p-8 lg:p-10 rounded-3xl shadow-[0_0_50px_rgba(16,185,129,0.1)] max-w-md w-full text-center">
-          <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-500/20">
-            <KeyRound className="w-8 h-8 text-emerald-400" />
-          </div>
-          <h2 className="text-2xl font-bold mb-3 text-white">Unlock Rotator Asset</h2>
-          <p className="text-slate-400 mb-8 text-sm leading-relaxed">
-            Please enter your Etsy Vouncher Code, or use the Fourthwall Master Member Key provided on your membership dashboard.
-          </p>
+      <div className="w-full h-full min-h-[400px] bg-transparent font-sans flex flex-col justify-center items-center px-4 sm:p-2">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          whileHover={{ y: -5, scale: 1.01 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="relative overflow-hidden bg-gradient-to-b from-slate-900/95 to-slate-900/80 backdrop-blur-3xl border border-emerald-500/20 p-8 rounded-3xl shadow-[0_10px_40px_-10px_rgba(16,185,129,0.15)] hover:shadow-[0_20px_50px_-10px_rgba(16,185,129,0.3)] max-w-md w-full text-center group transition-shadow duration-500"
+        >
+          {/* Animated top edge reflection */}
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500"></div>
+          {/* Subtle inner animated glow */}
+          <div className="absolute -inset-20 bg-emerald-500/10 rounded-full blur-[80px] opacity-0 group-hover:opacity-50 transition-opacity duration-700 pointer-events-none"></div>
 
-          <form onSubmit={verifyLicenseContent} className="space-y-4">
-            <input 
-              type="text" 
-              value={accessCode}
-              onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-              className="w-full bg-slate-950 border border-white/10 rounded-2xl px-6 py-4 text-center font-mono text-xl tracking-widest text-emerald-300 focus:outline-none focus:border-emerald-500/50"
-              placeholder="XXXX-XXXX-XXXX"
-              required
-            />
-            
-            <AnimatePresence>
-              {paywallError && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                  <div className="text-sm p-3 rounded-xl border bg-red-500/10 border-red-500/20 text-red-400 mt-2 font-medium">
-                    {paywallError}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <button 
-              type="submit" 
-              disabled={isVerifying || !accessCode}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center mt-4 disabled:opacity-50"
+          <div className="relative z-10">
+            <motion.div 
+              whileHover={{ rotate: 180, scale: 1.1 }}
+              transition={{ duration: 0.5 }}
+              className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-6 border border-emerald-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
             >
-              {isVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                <>
-                  <Unlock className="w-5 h-5 mr-2" /> Verify Code
-                </>
-              )}
-            </button>
-          </form>
+              <KeyRound className="w-8 h-8 text-emerald-400" />
+            </motion.div>
+            <h2 className="text-2xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">Unlock Rotator Asset</h2>
+            <p className="text-emerald-100/60 mb-6 text-sm leading-relaxed font-medium">
+              Enter your Etsy Voucher Code, or use the Fourthwall Master Member Key to securely authenticate.
+            </p>
+
+            <form onSubmit={verifyLicenseContent} className="space-y-4">
+              <div className="relative group/input">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/30 to-cyan-500/30 rounded-2xl blur opacity-0 group-focus-within/input:opacity-100 transition duration-500"></div>
+                <input 
+                  type="text" 
+                  value={accessCode}
+                  onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                  className="relative w-full bg-slate-950/80 border border-white/10 rounded-2xl px-6 py-4 text-center font-mono text-xl tracking-widest text-emerald-300 focus:outline-none focus:border-emerald-400/50 shadow-inner transition-colors"
+                  placeholder="XXXX-XXXX-XXXX"
+                  required
+                />
+              </div>
+              
+              <AnimatePresence>
+                {paywallError && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                    <div className="text-sm p-3 rounded-xl border bg-red-950/50 border-red-500/30 text-red-400 mt-2 font-medium backdrop-blur-md">
+                      {paywallError}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit" 
+                disabled={isVerifying || !accessCode}
+                className="w-full relative overflow-hidden group/btn bg-gradient-to-b from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 text-slate-950 font-extrabold py-4 px-6 rounded-2xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center justify-center mt-2 disabled:opacity-50 disabled:cursor-not-allowed border border-emerald-400/50"
+              >
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out"></div>
+                <div className="relative flex items-center">
+                  {isVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                    <>
+                      <Unlock className="w-5 h-5 mr-2 group-hover/btn:-translate-y-0.5 transition-transform" /> Verify Code
+                    </>
+                  )}
+                </div>
+              </motion.button>
+            </form>
+          </div>
         </motion.div>
       </div>
     );
@@ -150,53 +175,79 @@ export default function EmbeddedDashboard() {
 
   // ----- UI STATE: UNLOCKED DASHBOARD -----
   return (
-    <div className="w-full bg-transparent font-sans flex flex-col items-center justify-center py-8 px-4">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-900/80 backdrop-blur-xl border border-white/10 p-8 lg:p-12 rounded-3xl shadow-2xl max-w-3xl w-full">
-        <header className="flex justify-between items-start mb-8 pb-8 border-b border-white/10">
+    <div className="w-full h-full min-h-[400px] bg-transparent font-sans flex flex-col items-center justify-center px-4 sm:p-2">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        whileHover={{ y: -5, boxShadow: "0 25px 50px -12px rgba(255, 255, 255, 0.1)" }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="relative overflow-hidden bg-gradient-to-br from-slate-900/95 to-slate-900/80 backdrop-blur-3xl border border-white/10 p-8 rounded-3xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] max-w-2xl w-full group transition-all duration-500"
+      >
+        {/* Animated edge reflection */}
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent opacity-50"></div>
+
+        <header className="relative z-10 flex justify-between items-start mb-6 pb-6 border-b border-white/5">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-3 text-white mb-2">
-              <div className="p-2 bg-emerald-500/20 rounded-xl">
-                <Settings className="w-6 h-6 text-emerald-400" />
-              </div>
+            <h1 className="text-2xl font-extrabold flex items-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/80 mb-1">
+              <motion.div 
+                whileHover={{ rotate: 90 }} 
+                transition={{ duration: 0.3 }}
+                className="p-2 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 rounded-xl border border-emerald-500/20 shadow-inner"
+              >
+                <Settings className="w-5 h-5 text-emerald-400" />
+              </motion.div>
               Control Panel
             </h1>
-            <p className="text-emerald-400/80 font-medium text-sm flex items-center gap-1.5"><Sparkles className="w-4 h-4"/> Authorized via: {accessType}</p>
+            <p className="text-emerald-400/80 font-semibold text-xs flex items-center gap-1.5 uppercase tracking-wider pl-1"><Sparkles className="w-3.5 h-3.5"/> Access: {accessType}</p>
           </div>
-          <button onClick={handleLogout} className="text-slate-400 hover:text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:bg-white/5 border border-transparent hover:border-white/10">
+          <motion.button 
+            whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)" }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleLogout} 
+            className="text-slate-400 hover:text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors border border-transparent hover:border-white/10 shadow-sm"
+          >
             Disconnect
-          </button>
+          </motion.button>
         </header>
 
-        <main>
-          <div className="mb-8">
-            <h2 className="text-xl font-bold mb-2 text-white">Your Streaming URL</h2>
-            <p className="text-slate-400 text-sm">Copy this secure endpoint and paste it into OBS Studio as a Browser Source.</p>
+        <main className="relative z-10">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold mb-1 text-white">Your Streaming URL</h2>
+            <p className="text-slate-400 text-sm font-medium">Paste this endpoint into OBS Studio as a Browser Source.</p>
           </div>
           
-          <div className="flex flex-col md:flex-row gap-4 items-stretch">
-            <div className="flex-1 relative">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+            <div className="flex-1 relative group/url">
+               <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/30 to-cyan-500/30 rounded-2xl blur opacity-0 group-hover/url:opacity-100 transition duration-500"></div>
                <input 
                  type="text" 
                  readOnly 
                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/widget/${widgetId}`}
-                 className="relative w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 font-mono text-emerald-300 shadow-inner focus:outline-none h-full"
+                 className="relative w-full bg-slate-950/80 border border-white/10 rounded-2xl px-5 py-3.5 font-mono text-emerald-300 shadow-inner focus:outline-none h-full text-sm"
                />
             </div>
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigator.clipboard.writeText(`${window.location.origin}/widget/${widgetId}`)}
-              className="bg-white hover:bg-slate-100 text-slate-950 font-bold py-4 px-8 rounded-2xl transition-all shadow-lg flex items-center justify-center shrink-0"
+              className="relative overflow-hidden group/btn bg-gradient-to-b from-white to-slate-200 hover:from-white hover:to-white text-slate-950 font-extrabold py-3.5 px-6 rounded-2xl transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] flex items-center justify-center shrink-0 border border-white"
             >
-              <Copy className="w-5 h-5 mr-2" /> Copy Link
-            </button>
+              <div className="absolute inset-0 bg-emerald-400/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out"></div>
+              <span className="relative flex items-center"><Copy className="w-4 h-4 mr-2 group-hover/btn:-translate-y-0.5 transition-transform" /> Copy Link</span>
+            </motion.button>
           </div>
 
-          <div className="mt-8 p-5 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-start gap-4">
-            <AlertTriangle className="w-6 h-6 text-cyan-400 shrink-0 mt-0.5" />
-            <div className="text-cyan-100/80 text-sm leading-relaxed">
-              <strong className="text-cyan-300 block mb-1">Architecture Note</strong>
+          <motion.div 
+            whileHover={{ scale: 1.01 }}
+            className="mt-6 p-4 bg-gradient-to-br from-cyan-500/10 to-transparent border border-cyan-500/20 rounded-2xl flex items-start gap-4 shadow-inner"
+          >
+            <AlertTriangle className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
+            <div className="text-cyan-100/70 text-xs leading-relaxed font-medium">
+              <strong className="text-cyan-300 block mb-1 tracking-wide uppercase">Architecture Note</strong>
               Because you are accessing this directly inside your Member Dashboard, you do not need to configure CSS or Alpha layers in OBS.
             </div>
-          </div>
+          </motion.div>
         </main>
       </motion.div>
     </div>
