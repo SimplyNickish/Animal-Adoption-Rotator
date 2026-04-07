@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Settings as SettingsIcon, Sparkles, AlertTriangle, Loader2, KeyRound, Unlock, Copy, Save, MessageSquare, CheckCircle2, Twitch } from 'lucide-react';
 import { useWidgetSettings, WidgetSettings } from '../../lib/useWidgetSettings';
 
-const WIDGET_BASE = process.env.NEXT_PUBLIC_WIDGET_BASE_URL || 'https://simplynickish.com';
+const WIDGET_BASE = process.env.NEXT_PUBLIC_WIDGET_BASE_URL || 'https://app.simplynickish.com';
 
 export default function EmbeddedDashboard() {
   const [widgetId, setWidgetId] = useState<string | null>(null);

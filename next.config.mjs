@@ -16,7 +16,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "frame-ancestors 'self' https://*.fourthwall.com https://fourthwall.com https://*.simplynickish.com https://simplynickish.com localhost:3000;",
+            value: "frame-ancestors 'self' https://*.fourthwall.com https://fourthwall.com https://*.simplynickish.com https://simplynickish.com https://app.simplynickish.com localhost:3000;",
           },
           {
             key: 'X-Content-Type-Options',
