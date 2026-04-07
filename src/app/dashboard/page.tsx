@@ -101,8 +101,8 @@ export default function EmbeddedDashboard() {
   // ----- UI STATE: NO ACCESS CODE PROVIDED -----
   if (!isUnlocked) {
     return (
-      <div className="w-full min-h-screen bg-slate-950 font-sans flex flex-col justify-center items-center py-10 px-4">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900 border border-emerald-500/30 p-8 lg:p-10 rounded-3xl shadow-[0_0_50px_rgba(16,185,129,0.1)] max-w-md w-full text-center">
+      <div className="w-full bg-transparent font-sans flex flex-col justify-center items-center py-8 px-4">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/80 backdrop-blur-xl border border-emerald-500/30 p-8 lg:p-10 rounded-3xl shadow-[0_0_50px_rgba(16,185,129,0.1)] max-w-md w-full text-center">
           <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-500/20">
             <KeyRound className="w-8 h-8 text-emerald-400" />
           </div>
@@ -150,8 +150,8 @@ export default function EmbeddedDashboard() {
 
   // ----- UI STATE: UNLOCKED DASHBOARD -----
   return (
-    <div className="w-full min-h-screen bg-slate-950 font-sans flex flex-col items-center justify-center py-10 px-4">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-900 border border-white/10 p-8 lg:p-12 rounded-3xl shadow-2xl max-w-3xl w-full">
+    <div className="w-full bg-transparent font-sans flex flex-col items-center justify-center py-8 px-4">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-900/80 backdrop-blur-xl border border-white/10 p-8 lg:p-12 rounded-3xl shadow-2xl max-w-3xl w-full">
         <header className="flex justify-between items-start mb-8 pb-8 border-b border-white/10">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-3 text-white mb-2">
