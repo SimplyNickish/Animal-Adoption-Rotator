@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Settings as SettingsIcon, Sparkles, AlertTriangle, Loader2, KeyRound, Unlock, Copy, Save, MessageSquare, CheckCircle2, Twitch } from 'lucide-react';
 import { useWidgetSettings, WidgetSettings } from '../../lib/useWidgetSettings';
 
+const WIDGET_BASE = process.env.NEXT_PUBLIC_WIDGET_BASE_URL || 'https://simplynickish.com';
+
 export default function EmbeddedDashboard() {
   const [widgetId, setWidgetId] = useState<string | null>(null);
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
@@ -166,7 +168,7 @@ export default function EmbeddedDashboard() {
   };
 
   const executeCopy = () => {
-    const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/widget/${widgetId}`;
+    const url = `${WIDGET_BASE}/widget/${widgetId}`;
     if (!navigator.clipboard) {
       fallbackCopyTextToClipboard(url);
     } else {
@@ -286,7 +288,7 @@ export default function EmbeddedDashboard() {
               <input 
                  type="text" 
                  readOnly 
-                 value={`${typeof window !== 'undefined' ? window.location.origin : ''}/widget/${widgetId}`}
+                 value={`${WIDGET_BASE}/widget/${widgetId}`}
                  className="relative w-full bg-slate-950/80 border border-white/10 rounded-xl px-4 py-3 font-mono text-emerald-300 focus:outline-none text-xs sm:text-sm"
                />
               <motion.button 
