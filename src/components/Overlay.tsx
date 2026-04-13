@@ -8,6 +8,13 @@ import { Animal, fetchAllAnimals } from '../lib/api';
 import { createClient } from '../lib/supabase/client';
 import { useWidgetSettings, WidgetSettings } from '../lib/useWidgetSettings';
 
+const THEMES: Record<string, { glow: string; badgeText: string; badgeBg: string; text: string; loader: string; glowOrb: string }> = {
+  emerald: { glow: 'from-emerald-400/40 via-white/5 to-teal-400/40', badgeText: 'text-emerald-400', badgeBg: 'bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.2)]', text: 'text-emerald-400', loader: 'border-emerald-500/30 border-t-emerald-500', glowOrb: 'bg-emerald-400/20' },
+  rose: { glow: 'from-rose-400/40 via-white/5 to-pink-400/40', badgeText: 'text-rose-400', badgeBg: 'bg-rose-500/10 border-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.2)]', text: 'text-rose-400', loader: 'border-rose-500/30 border-t-rose-500', glowOrb: 'bg-rose-400/20' },
+  cyan: { glow: 'from-cyan-400/40 via-white/5 to-blue-400/40', badgeText: 'text-cyan-400', badgeBg: 'bg-cyan-500/10 border-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.2)]', text: 'text-cyan-400', loader: 'border-cyan-500/30 border-t-cyan-500', glowOrb: 'bg-cyan-400/20' },
+  purple: { glow: 'from-purple-400/40 via-white/5 to-fuchsia-400/40', badgeText: 'text-purple-400', badgeBg: 'bg-purple-500/10 border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.2)]', text: 'text-purple-400', loader: 'border-purple-500/30 border-t-purple-500', glowOrb: 'bg-purple-400/20' }
+};
+
 interface ErrorBoundaryProps {
   children: ReactNode;
 }
@@ -305,6 +312,10 @@ function App() {
     );
   }
 
+  const themeColorKey = settings.themeColor || 'emerald';
+  const theme = THEMES[themeColorKey] || THEMES.emerald;
+  const isNaked = settings.cardStyle === 'naked';
+
   return (
     <div className="w-screen h-screen flex items-center justify-center p-12 overflow-hidden relative group">
       
@@ -419,9 +430,9 @@ function App() {
             className="flex flex-col items-center justify-center font-medium h-full w-full"
           >
             {isLoading ? (
-              <div className="flex flex-col items-center bg-black/60 p-8 rounded-3xl backdrop-blur-md border border-white/10 shadow-2xl">
-                <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mb-4" />
-                <div className="text-xl animate-pulse text-white">
+              <div className={`flex flex-col items-center p-8 rounded-3xl backdrop-blur-md shadow-2xl ${isNaked ? '' : 'bg-black/60 border border-white/10'}`}>
+                <div className={`w-12 h-12 border-4 ${theme.loader} rounded-full animate-spin mb-4`} />
+                <div className={`text-xl animate-pulse ${theme.text}`}>
                   {settings.location ? `Searching for animals near ${settings.location}...` : 'Loading animals...'}
                 </div>
               </div>
@@ -440,18 +451,18 @@ function App() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-5xl flex rounded-[2.5rem] shadow-[0_0_80px_rgba(0,0,0,0.5)]"
+            className={`relative w-full max-w-5xl flex rounded-[2.5rem] ${isNaked ? '' : 'shadow-[0_0_80px_rgba(0,0,0,0.5)]'}`}
           >
           {/* Ambient Volumetric Glow behind the card */}
-          <div className="absolute -inset-1 bg-gradient-to-br from-emerald-400/40 via-white/5 to-sky-400/40 rounded-[2.5rem] blur-2xl opacity-80 -z-10" />
-          <div className="absolute -inset-4 bg-black/20 rounded-[3rem] blur-xl -z-20" />
+          {!isNaked && <div className={`absolute -inset-1 bg-gradient-to-br ${theme.glow} rounded-[2.5rem] blur-2xl opacity-80 -z-10`} />}
+          {!isNaked && <div className="absolute -inset-4 bg-black/20 rounded-[3rem] blur-xl -z-20" />}
 
           {/* Main Card Glass */}
-          <div className="relative w-full flex bg-gradient-to-br from-slate-800/80 to-zinc-900/80 backdrop-blur-3xl border border-white/20 rounded-[2.5rem] overflow-hidden ring-1 ring-white/10 shadow-2xl">
+          <div className={`relative w-full flex rounded-[2.5rem] overflow-hidden ${isNaked ? 'bg-transparent' : 'bg-gradient-to-br from-slate-800/80 to-zinc-900/80 backdrop-blur-3xl border border-white/20 ring-1 ring-white/10 shadow-2xl'}`}>
             
             {/* Inner Light Reflection (Top Edge) */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
-            <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-white/20 to-transparent opacity-50" />
+            {!isNaked && <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />}
+            {!isNaked && <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-white/20 to-transparent opacity-50" />}
 
             {/* Left Side: Slideshow */}
             <div className="w-1/2 relative bg-slate-900 aspect-square overflow-hidden">
@@ -487,11 +498,11 @@ function App() {
             {/* Right Side: Details */}
             <div className="w-1/2 p-12 flex flex-col justify-between text-white relative">
               {/* Subtle background glow inside the text area */}
-              <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-400/20 blur-[100px] rounded-full pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-400/20 blur-[80px] rounded-full pointer-events-none" />
+              {!isNaked && <div className={`absolute top-0 right-0 w-96 h-96 ${theme.glowOrb} blur-[100px] rounded-full pointer-events-none`} />}
+              {!isNaked && <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-400/20 blur-[80px] rounded-full pointer-events-none" />}
 
               <div className="relative z-10">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold tracking-wide mb-8 shadow-[0_0_20px_rgba(16,185,129,0.2)] backdrop-blur-md">
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${theme.badgeBg} ${theme.badgeText} text-sm font-bold tracking-wide mb-8 backdrop-blur-md`}>
                   <Sparkles className="w-4 h-4" />
                   Looking for a home
                 </div>
@@ -511,7 +522,7 @@ function App() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="text-2xl text-emerald-100/80 font-medium mb-10 drop-shadow-md line-clamp-2"
+                  className={`text-2xl ${isNaked ? 'text-white/80' : 'text-white/80'} font-medium mb-10 drop-shadow-md line-clamp-2`}
                 >
                   {currentAnimal.breed}
                 </motion.div>
@@ -551,7 +562,7 @@ function App() {
 
               <div className="mt-10 pt-8 border-t border-white/10 flex items-center gap-8 relative z-10">
                 <div className="relative group">
-                  <div className="absolute -inset-2 bg-emerald-400/30 rounded-3xl blur-xl group-hover:bg-emerald-400/40 transition-colors duration-500" />
+                  <div className={`absolute -inset-2 ${theme.glowOrb} rounded-3xl blur-xl group-hover:opacity-80 transition-opacity duration-500`} />
                   <div className="relative bg-white p-3.5 rounded-2xl shrink-0 shadow-[0_10px_20px_rgba(0,0,0,0.3)] ring-1 ring-black/5 w-24 h-24 sm:w-32 sm:h-32">
                     <QRCodeSVG value={currentAnimal.url || 'https://rescuegroups.org'} style={{ width: '100%', height: 'auto' }} level="H" className="drop-shadow-sm" />
                   </div>
@@ -559,7 +570,7 @@ function App() {
                 <div>
                   <div className="text-2xl font-bold mb-2 drop-shadow-lg text-white/90">Scan to Adopt</div>
                   <div className="text-white/50 text-base flex items-center gap-2 font-medium">
-                    Or type <span className="font-mono bg-black/40 border border-white/10 px-2.5 py-1 rounded-lg text-emerald-300 font-bold shadow-inner">!{currentAnimal.type} {currentAnimal.dailyNumber}</span> in chat
+                    Or type <span className={`font-mono bg-black/40 border border-white/10 px-2.5 py-1 rounded-lg ${theme.text} font-bold shadow-inner`}>!{currentAnimal.type} {currentAnimal.dailyNumber}</span> in chat
                   </div>
                 </div>
               </div>

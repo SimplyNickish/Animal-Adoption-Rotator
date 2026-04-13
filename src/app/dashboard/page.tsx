@@ -104,7 +104,7 @@ export default function EmbeddedDashboard() {
   }
 
   return (
-    <div className="w-full h-full min-h-[500px] bg-transparent font-sans flex flex-col items-center py-6 px-4 sm:px-6 lg:px-8">
+    <div className="w-full h-full min-h-screen bg-slate-950 font-sans flex flex-col items-center py-6 px-4 sm:px-6 lg:px-8 overflow-y-auto">
       
       {/* Header Banner */}
       <div className="w-full max-w-6xl mb-6 bg-gradient-to-r from-emerald-900/40 via-emerald-800/10 to-transparent border border-emerald-500/20 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-center gap-6 shadow-lg shadow-emerald-500/5">
@@ -246,6 +246,39 @@ export default function EmbeddedDashboard() {
                       onChange={(e) => setLocalSettings({...localSettings, rotationSize: e.target.value})}
                       className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-emerald-500/50 transition-colors shadow-inner text-sm font-mono"
                     />
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-white/5 mt-2">
+                  <label className="block text-xs font-bold text-emerald-400 mb-3 uppercase tracking-wide flex items-center gap-2">
+                     <Sparkles className="w-3.5 h-3.5" /> Visual Overrides
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] sm:text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Widget Color Theme</label>
+                      <select
+                        value={localSettings.themeColor}
+                        onChange={(e) => setLocalSettings({...localSettings, themeColor: e.target.value})}
+                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-emerald-500/50 transition-colors shadow-inner text-sm"
+                      >
+                        <option value="emerald">🟢 Emerald Green</option>
+                        <option value="rose">🔴 Rose Pink</option>
+                        <option value="cyan">🔵 Cyber Cyan</option>
+                        <option value="purple">🟣 Amethyst Purple</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] sm:text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Card Style</label>
+                      <select
+                        value={localSettings.cardStyle}
+                        onChange={(e) => setLocalSettings({...localSettings, cardStyle: e.target.value})}
+                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-emerald-500/50 transition-colors shadow-inner text-sm"
+                      >
+                        <option value="glass">Glass Box</option>
+                        <option value="naked">Naked (No Box)</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 

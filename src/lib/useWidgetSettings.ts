@@ -7,6 +7,8 @@ export interface WidgetSettings {
   displayDuration: string;
   rotationSize: string;
   autoSwapOnChat: boolean;
+  themeColor: string;
+  cardStyle: string;
 }
 
 const DEFAULT_SETTINGS: WidgetSettings = {
@@ -14,7 +16,9 @@ const DEFAULT_SETTINGS: WidgetSettings = {
   animalType: 'both',
   displayDuration: '60',
   rotationSize: '50',
-  autoSwapOnChat: false
+  autoSwapOnChat: false,
+  themeColor: 'emerald',
+  cardStyle: 'glass'
 };
 
 export function useWidgetSettings(widgetId: string | null) {
