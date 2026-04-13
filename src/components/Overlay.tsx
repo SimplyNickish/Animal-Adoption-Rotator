@@ -381,14 +381,14 @@ function App() {
           {!isNaked && <div className="absolute -inset-4 bg-black/20 rounded-[3rem] blur-xl -z-20" />}
 
           {/* Main Card Glass */}
-          <div className={`relative w-full flex rounded-[2.5rem] overflow-hidden ${isNaked ? 'bg-transparent' : 'bg-gradient-to-br from-slate-800/80 to-zinc-900/80 backdrop-blur-3xl border border-white/20 ring-1 ring-white/10 shadow-2xl'}`}>
+          <div className={`relative w-[1700px] h-[950px] flex ${isNaked ? 'bg-transparent items-center justify-center gap-24 px-16' : 'bg-gradient-to-br border border-white/20 ring-1 ring-white/10 shadow-2xl from-slate-800/80 to-zinc-900/80 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden'}`}>
             
             {/* Inner Light Reflection (Top Edge) */}
             {!isNaked && <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />}
             {!isNaked && <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-white/20 to-transparent opacity-50" />}
 
             {/* Left Side: Slideshow */}
-            <div className="w-1/2 relative bg-slate-900 aspect-square overflow-hidden">
+            <div className={`${isNaked ? 'w-[700px] h-[700px] rounded-[3rem] ring-1 ring-white/10 shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/5' : 'w-1/2 aspect-square'} relative bg-slate-900 overflow-hidden shrink-0`}>
               {/* Inner shadow for depth over images */}
               <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.3)] z-20 pointer-events-none" />
               {/* Vignette */}
@@ -419,7 +419,7 @@ function App() {
             </div>
 
             {/* Right Side: Details */}
-            <div className="w-1/2 p-12 flex flex-col justify-between text-white relative">
+            <div className={`${isNaked ? 'w-[800px] shrink-0' : 'w-1/2'} p-12 flex flex-col justify-between text-white relative`}>
               {/* Subtle background glow inside the text area */}
               {!isNaked && <div className={`absolute top-0 right-0 w-96 h-96 ${theme.glowOrb} blur-[100px] rounded-full pointer-events-none`} />}
               {!isNaked && <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-400/20 blur-[80px] rounded-full pointer-events-none" />}
