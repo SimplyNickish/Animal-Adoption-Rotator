@@ -137,7 +137,7 @@ export default function EmbeddedDashboard() {
             </div>
             
             {/* Iframe Preview Container */}
-            <div className="relative flex-grow bg-[url('https://transparenttextures.com/patterns/cubes.png')] bg-slate-950/50 overflow-hidden group">
+            <div className="relative flex-grow bg-black overflow-hidden group">
                {/* Loading indicator that hides once iframe loads (managed automatically by iframe visually usually, but we keep it simple here) */}
                <div className="absolute inset-0 flex items-center justify-center opacity-50 z-0 text-slate-500 font-medium">Loading preview...</div>
                <iframe 
@@ -279,6 +279,34 @@ export default function EmbeddedDashboard() {
                         <option value="naked">Naked (No Box)</option>
                       </select>
                     </div>
+                    
+                    <div>
+                      <label className="block text-[10px] sm:text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Screen Position</label>
+                      <select
+                        value={localSettings.widgetAlignment}
+                        onChange={(e) => setLocalSettings({...localSettings, widgetAlignment: e.target.value})}
+                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-emerald-500/50 transition-colors shadow-inner text-sm"
+                      >
+                        <option value="center">Middle Center</option>
+                        <option value="top-left">Top Left</option>
+                        <option value="top-right">Top Right</option>
+                        <option value="bottom-left">Bottom Left</option>
+                        <option value="bottom-right">Bottom Right</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] sm:text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Font Style</label>
+                      <select
+                        value={localSettings.fontFamily}
+                        onChange={(e) => setLocalSettings({...localSettings, fontFamily: e.target.value})}
+                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-emerald-500/50 transition-colors shadow-inner text-sm"
+                      >
+                        <option value="sans">Modern (Default)</option>
+                        <option value="mono">Monospace (Tech)</option>
+                        <option value="serif">Serif (Classic)</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -300,38 +328,61 @@ export default function EmbeddedDashboard() {
                   </p>
                 </div>
 
-                {/* Sub-accordion or compact Webhooks view */}
+                {/* Sub-accordion Webhooks view */}
                 <div className="pt-4 border-t border-white/5 mt-2">
                   <label className="block text-xs font-bold text-slate-300 mb-3 uppercase tracking-wide flex items-center gap-2">
                      Bot Webhook Integrations
                   </label>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-col gap-1.5 p-3 sm:p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/10 transition-colors group">
+                  <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                    Link your chat bot directly to your widget! By copying the codes below into your bot commands, your viewers can trigger live widget swaps when they type command triggers in your chat.
+                  </p>
+                  <div className="flex flex-col gap-4">
+                    
+                    {/* StreamElements Segment */}
+                    <div className="flex flex-col gap-3 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/10 transition-colors group">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-emerald-400">StreamElements</span>
+                        <span className="font-extrabold text-emerald-400 text-sm">StreamElements Guide</span>
                         <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded uppercase font-bold tracking-widest">!adopt</span>
                       </div>
-                      <code className="bg-black/60 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-mono text-emerald-200 select-all border border-emerald-500/10 overflow-x-auto whitespace-nowrap scrollbar-none">
+                      <ol className="text-xs text-slate-300 space-y-1.5 ml-3 list-decimal list-outside">
+                        <li>Go to <strong>Chat Commands &gt; Custom Commands</strong> in your StreamElements dashboard.</li>
+                        <li>Click <strong>Add New Command</strong> and set the Command name to `!adopt`.</li>
+                        <li>Paste the exact code block below into the <strong>Response</strong> field.</li>
+                        <li>Set user cooldown to 5 seconds to prevent spam.</li>
+                      </ol>
+                      <code className="bg-black/60 px-3 py-2 rounded-lg text-xs font-mono text-emerald-200 select-all border border-emerald-500/10 overflow-x-auto whitespace-nowrap mt-1">
                         {"${customapi." + (typeof window !== 'undefined' ? window.location.origin : 'https://app.simplynickish.com') + "/api/bot?widget=" + widgetId + "&cmd=adopt&num=${1}}"}
                       </code>
                     </div>
                     
-                    <div className="flex flex-col gap-1.5 p-3 sm:p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl hover:bg-purple-500/10 transition-colors group">
+                    {/* Nightbot Segment */}
+                    <div className="flex flex-col gap-3 p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl hover:bg-purple-500/10 transition-colors group">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-purple-400">Nightbot</span>
-                        <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded uppercase font-bold tracking-widest">!dog</span>
+                        <span className="font-extrabold text-purple-400 text-sm">Nightbot Guide</span>
+                        <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded uppercase font-bold tracking-widest">!dog / !cat</span>
                       </div>
-                      <code className="bg-black/60 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-mono text-purple-200 select-all border border-purple-500/10 overflow-x-auto whitespace-nowrap scrollbar-none">
+                      <ol className="text-xs text-slate-300 space-y-1.5 ml-3 list-decimal list-outside">
+                        <li>Go to <strong>Commands &gt; Custom</strong> in your Nightbot dashboard.</li>
+                        <li>Click <strong>Add Command</strong> and set the Command name to `!dog` (or `!cat`).</li>
+                        <li>Paste the precise `$(urlfetch)` snippet below into the <strong>Message</strong> box.</li>
+                      </ol>
+                      <code className="bg-black/60 px-3 py-2 rounded-lg text-xs font-mono text-purple-200 select-all border border-purple-500/10 overflow-x-auto whitespace-nowrap mt-1">
                         {"$(urlfetch " + (typeof window !== 'undefined' ? window.location.origin : 'https://app.simplynickish.com') + "/api/bot?widget=" + widgetId + "&cmd=dog&num=$(1))"}
                       </code>
                     </div>
 
-                    <div className="flex flex-col gap-1.5 p-3 sm:p-4 bg-slate-800/50 border border-white/5 rounded-xl hover:bg-slate-800 transition-colors group">
+                    {/* Streamer.bot Segment */}
+                    <div className="flex flex-col gap-3 p-4 bg-slate-800/50 border border-white/5 rounded-xl hover:bg-slate-800 transition-colors group">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-slate-300">Streamer.bot / MixItUp</span>
+                        <span className="font-extrabold text-slate-300 text-sm">Streamer.bot / MixItUp</span>
                         <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded uppercase font-bold tracking-widest">HTTP GET</span>
                       </div>
-                      <code className="bg-black/60 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-mono text-slate-200 select-all border border-white/5 overflow-x-auto whitespace-nowrap scrollbar-none">
+                      <ol className="text-xs text-slate-300 space-y-1.5 ml-3 list-decimal list-outside">
+                        <li>Create a new Action triggered by a chat command.</li>
+                        <li>Add a Sub-Action for <strong>Fetch URL</strong> (Streamer.bot) or <strong>Web Request</strong> (MixItUp).</li>
+                        <li>Point it to the URL below using a simple <code>GET</code> request.</li>
+                      </ol>
+                      <code className="bg-black/60 px-3 py-2 rounded-lg text-[10px] sm:text-xs font-mono text-slate-200 select-all border border-white/5 overflow-x-auto whitespace-nowrap mt-1">
                         {(typeof window !== 'undefined' ? window.location.origin : 'https://app.simplynickish.com') + "/api/bot?widget=" + widgetId + "&cmd=adopt"}
                       </code>
                     </div>

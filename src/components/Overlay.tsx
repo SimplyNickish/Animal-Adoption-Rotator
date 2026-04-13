@@ -316,8 +316,24 @@ function App() {
   const theme = THEMES[themeColorKey] || THEMES.emerald;
   const isNaked = settings.cardStyle === 'naked';
 
+  const alignMap: Record<string, string> = {
+    'center': 'items-center justify-center',
+    'top-left': 'items-start justify-start',
+    'top-right': 'items-start justify-end',
+    'bottom-left': 'items-end justify-start',
+    'bottom-right': 'items-end justify-end',
+  };
+  const alignmentClass = alignMap[settings.widgetAlignment || 'center'] || alignMap.center;
+
+  const fontMap: Record<string, string> = {
+    'sans': 'font-sans',
+    'mono': 'font-mono tracking-tighter', // add tight tracking for mono since it runs very wide
+    'serif': 'font-serif',
+  };
+  const fontClass = fontMap[settings.fontFamily || 'sans'] || fontMap.sans;
+
   return (
-    <div className="w-screen h-screen flex items-center justify-center p-12 overflow-hidden relative group">
+    <div className={`w-screen h-screen flex ${alignmentClass} ${fontClass} p-12 overflow-hidden relative group`}>
       
       {/* Settings Button (visible only on hover) */}
       <button 

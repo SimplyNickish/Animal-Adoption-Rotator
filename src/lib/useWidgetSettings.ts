@@ -9,6 +9,8 @@ export interface WidgetSettings {
   autoSwapOnChat: boolean;
   themeColor: string;
   cardStyle: string;
+  widgetAlignment: string;
+  fontFamily: string;
 }
 
 const DEFAULT_SETTINGS: WidgetSettings = {
@@ -18,7 +20,9 @@ const DEFAULT_SETTINGS: WidgetSettings = {
   rotationSize: '50',
   autoSwapOnChat: false,
   themeColor: 'emerald',
-  cardStyle: 'glass'
+  cardStyle: 'glass',
+  widgetAlignment: 'center',
+  fontFamily: 'sans'
 };
 
 export function useWidgetSettings(widgetId: string | null) {
