@@ -49,7 +49,7 @@ export async function fetchRescueGroups(animalType: string, locationFilter: stri
       if (json.data && Array.isArray(json.data)) {
         json.data.forEach((item: any, index: number) => {
           const name = item.attributes.name;
-          const age = item.attributes.ageString || 'Unknown Age';
+          const age = item.attributes.ageString || item.attributes.ageGroup || 'Unknown Age';
           const url = item.attributes.url;
 
           let breed = 'Mixed Breed';
@@ -167,8 +167,15 @@ export async function fetchPetRescue(animalType: string): Promise<Animal[]> {
         let img = el.querySelector('img.cards-listings-preview__img')?.getAttribute('data-src') || el.querySelector('img.cards-listings-preview__img')?.getAttribute('src');
         if (img) img = img.replace('w_auto:100:500', 'w_600');
         
-        const breed = el.querySelector('.cards-listings-preview__content__section__species')?.textContent?.trim().replace(/Dog|Cat/g, '').trim();
+        const speciesText = el.querySelector('.cards-listings-preview__content__section__species')?.textContent?.trim() || '';
+        const breed = speciesText.replace(/Dog|Cat/g, '').trim();
         const location = el.querySelector('.cards-listings-preview__content__section__location')?.textContent?.trim();
+
+        // PetRescue cards show size + gender (e.g. "medium female Dog") — extract as age descriptor
+        const sizeGenderMatch = speciesText.match(/^(small|medium|large)\s+(male|female)/i);
+        const age = sizeGenderMatch 
+          ? `${sizeGenderMatch[1].charAt(0).toUpperCase() + sizeGenderMatch[1].slice(1)} ${sizeGenderMatch[2].charAt(0).toUpperCase() + sizeGenderMatch[2].slice(1)}`
+          : 'Unknown Age';
         
         if (name && url && img) {
           animals.push({
@@ -177,7 +184,7 @@ export async function fetchPetRescue(animalType: string): Promise<Animal[]> {
             dailyNumber: 0,
             name: name || 'Unknown',
             breed: breed || 'Mixed Breed',
-            age: 'Unknown Age',
+            age,
             location: location || 'Australia',
             shelter: 'PetRescue',
             url: url,
@@ -218,6 +225,7 @@ export async function fetchRssFeed(url: string, sourceName: string, defaultLocat
     if (data.status !== 'ok') return [];
 
     const imgRegex = /<img[^>]+src="([^">]+)"/i;
+    const ageRegex = /\b(\d+\s*(?:year|month|week|yr|mo|wk)s?\s*(?:old)?|puppy|kitten|senior|adult|young|baby|juvenile)\b/i;
     
     return data.items.map((item: any, i: number) => {
       let img = item.thumbnail || (item.enclosure && item.enclosure.link);
@@ -226,13 +234,18 @@ export async function fetchRssFeed(url: string, sourceName: string, defaultLocat
         if (match) img = match[1];
       }
 
+      // Try to extract age from title or description text
+      const textToSearch = `${item.title || ''} ${item.description || ''} ${item.content || ''}`;
+      const ageMatch = textToSearch.match(ageRegex);
+      const age = ageMatch ? ageMatch[1].trim() : 'Unknown Age';
+
       return {
         id: `${sourceName}-${i}`,
         type,
         dailyNumber: 0,
         name: item.title || 'Unknown',
         breed: 'Mixed Breed',
-        age: 'Unknown Age',
+        age,
         location: defaultLocation,
         shelter: data.feed?.title || sourceName,
         url: item.link,

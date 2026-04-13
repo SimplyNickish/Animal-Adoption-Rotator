@@ -3,7 +3,7 @@ import React, { useEffect, useState, Component, ErrorInfo, ReactNode, useRef } f
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, Heart, Info, Sparkles, Settings, X, SearchX, MessageSquare, AlertTriangle, ShieldAlert } from 'lucide-react';
-import tmi from 'tmi.js';
+
 import { Animal, fetchAllAnimals } from '../lib/api';
 import { createClient } from '../lib/supabase/client';
 import { useWidgetSettings, WidgetSettings } from '../lib/useWidgetSettings';
@@ -201,78 +201,25 @@ function App() {
     return () => clearInterval(timer);
   }, [animals, settings.displayDuration]);
 
-  // Streamer.bot Connection
+  // Unified Bot Integration (Supabase Realtime)
   useEffect(() => {
-    if (settings.botIntegration === 'streamerbot' && settings.streamerbotUrl) {
-      const ws = new WebSocket(settings.streamerbotUrl);
-      
-      ws.onopen = () => {
-        console.log('Connected to Streamer.bot');
-      };
-      
-      ws.onerror = (e) => {
-        console.error('Streamer.bot WebSocket error', e);
-      };
+    if (!isReady || !widgetId) return;
 
-      sbWsRef.current = ws;
-
-      return () => {
-        ws.close();
-        sbWsRef.current = null;
-      };
-    }
-  }, [settings.botIntegration, settings.streamerbotUrl]);
-
-  // Twitch Connection
-  useEffect(() => {
-    if (!settings.twitchChannel) {
-      if (twitchClientRef.current) {
-        twitchClientRef.current.disconnect();
-        twitchClientRef.current = null;
-      }
-      return;
-    }
-
-    const channel = settings.twitchChannel.replace('#', '').trim().toLowerCase();
+    const supabase = createClient();
     
-    const clientOptions: tmi.Options = {
-      channels: [`#${channel}`]
-    };
-
-    if (settings.botIntegration === 'twitch' && settings.twitchBotUsername && settings.twitchBotToken) {
-      clientOptions.identity = {
-        username: settings.twitchBotUsername,
-        password: settings.twitchBotToken
-      };
-    }
-
-    const client = new tmi.Client(clientOptions);
-
-    client.connect().catch(console.error);
-    twitchClientRef.current = client;
-
-    client.on('message', (ch, tags, message, self) => {
-      if (self) return;
-      const msg = message.toLowerCase().trim();
-      
-      if (msg.startsWith('!adopt') || msg.startsWith('!dog') || msg.startsWith('!cat')) {
-        const parts = msg.split(' ');
-        const cmd = parts[0];
-        const numStr = parts[1];
-        const num = numStr ? parseInt(numStr) : null;
-
-        let targetAnimal: Animal | undefined;
+    const requestChannel = supabase.channel(`public:bot_requests:${widgetId}`)
+      .on('broadcast', { event: 'bot_request' }, (payload) => {
+        const { requestId, cmd, num } = payload.payload;
+        
         const currentAnimals = animalsRef.current;
         const currentIdx = currentIndexRef.current;
-
-        if (cmd === '!adopt') {
-          if (num) {
-            targetAnimal = currentAnimals.find(a => a.dailyNumber === num);
-          } else {
-            targetAnimal = currentAnimals[currentIdx];
-          }
+        let targetAnimal: Animal | undefined;
+        
+        if (cmd === 'adopt') {
+          if (num) targetAnimal = currentAnimals.find(a => a.dailyNumber === num);
+          else targetAnimal = currentAnimals[currentIdx];
         } else {
-          const targetType = cmd === '!dog' ? 'dog' : 'cat';
+          const targetType = cmd === 'dog' ? 'dog' : 'cat';
           if (num) {
             targetAnimal = currentAnimals.find(a => a.type === targetType && a.dailyNumber === num);
           } else {
@@ -283,43 +230,33 @@ function App() {
           }
         }
 
-        const sendReply = (replyMessage: string) => {
-          if (settings.botIntegration === 'streamerbot' && sbWsRef.current?.readyState === WebSocket.OPEN) {
-            sbWsRef.current.send(JSON.stringify({
-              request: "SendMessage",
-              platform: "twitch",
-              message: replyMessage,
-              id: `msg_${Date.now()}`
-            }));
-          } else if (settings.botIntegration === 'twitch') {
-            client.say(ch, replyMessage).catch((e) => {
-              console.warn('Could not send Twitch message (bot not authenticated)', e);
-            });
-          }
-        };
-
+        let responseMessage = "Couldn't find that animal right now.";
         if (targetAnimal) {
-          // Update the overlay to show the requested animal
-          const newIndex = currentAnimals.findIndex(a => a.id === targetAnimal!.id);
-          if (newIndex !== -1) {
-            setCurrentIndex(newIndex);
-            setPictureIndex(0);
-          }
-
           const typeLabel = targetAnimal.type === 'dog' ? 'Dog' : 'Cat';
-          sendReply(`Meet ${targetAnimal.name} (${typeLabel} #${targetAnimal.dailyNumber})! Adopt here: ${targetAnimal.url}`);
-        } else {
-          const targetType = cmd === '!dog' ? 'dog' : cmd === '!cat' ? 'cat' : 'animal';
-          sendReply(`Couldn't find ${targetType} #${num || 'currently'}.`);
+          responseMessage = `Meet ${targetAnimal.name} (${typeLabel} #${targetAnimal.dailyNumber})! Adopt here: ${targetAnimal.url}`;
+          
+          if (settings.autoSwapOnChat) {
+            const newIndex = currentAnimals.findIndex(a => a.id === targetAnimal!.id);
+            if (newIndex !== -1) {
+              setCurrentIndex(newIndex);
+              setPictureIndex(0);
+            }
+          }
         }
-      }
-    });
+
+        // Send back the response String so the Server can return it to the chatbot
+        supabase.channel(`public:bot_responses:${requestId}`).send({
+          type: 'broadcast',
+          event: 'bot_response',
+          payload: { message: responseMessage }
+        });
+      })
+      .subscribe();
 
     return () => {
-      client.disconnect();
-      twitchClientRef.current = null;
+      supabase.removeChannel(requestChannel);
     };
-  }, [settings.twitchChannel, settings.twitchBotUsername, settings.twitchBotToken, settings.botIntegration]);
+  }, [widgetId, isReady, settings.autoSwapOnChat]);
 
   useEffect(() => {
     if (!currentAnimal || !currentAnimal.pictures || currentAnimal.pictures.length <= 1) return;
@@ -454,82 +391,7 @@ function App() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1 flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" /> Twitch Channel
-                </label>
-                <input
-                  type="text"
-                  value={localSettings.twitchChannel}
-                  onChange={(e) => setLocalSettings({...localSettings, twitchChannel: e.target.value})}
-                  placeholder="e.g. ninja"
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                />
-                <p className="text-xs text-slate-500 mt-1">Connects chatbot for !dog and !cat commands</p>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Bot Integration
-                </label>
-                <select
-                  value={localSettings.botIntegration}
-                  onChange={(e) => setLocalSettings({...localSettings, botIntegration: e.target.value as any})}
-                  className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                >
-                  <option value="none" className="bg-slate-900 text-white">None (Overlay Only)</option>
-                  <option value="streamerbot" className="bg-slate-900 text-white">Streamer.bot</option>
-                  <option value="twitch" className="bg-slate-900 text-white">Direct Twitch Auth</option>
-                </select>
-              </div>
-
-              {localSettings.botIntegration === 'streamerbot' && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
-                    Streamer.bot WebSocket URL
-                  </label>
-                  <input
-                    type="text"
-                    value={localSettings.streamerbotUrl}
-                    onChange={(e) => setLocalSettings({...localSettings, streamerbotUrl: e.target.value})}
-                    placeholder="ws://127.0.0.1:8080/"
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">Make sure Streamer.bot WebSocket server is running.</p>
-                </div>
-              )}
-
-              {localSettings.botIntegration === 'twitch' && (
-                <>
-                  <div className="flex gap-4">
-                    <div className="w-1/2">
-                      <label className="block text-sm font-medium text-slate-300 mb-1">
-                        Bot Username
-                      </label>
-                      <input
-                        type="text"
-                        value={localSettings.twitchBotUsername}
-                        onChange={(e) => setLocalSettings({...localSettings, twitchBotUsername: e.target.value})}
-                        placeholder="e.g. mybot"
-                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                      />
-                    </div>
-                    <div className="w-1/2">
-                      <label className="block text-sm font-medium text-slate-300 mb-1">
-                        Bot OAuth Token
-                      </label>
-                      <input
-                        type="password"
-                        value={localSettings.twitchBotToken}
-                        onChange={(e) => setLocalSettings({...localSettings, twitchBotToken: e.target.value})}
-                        placeholder="oauth:..."
-                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                      />
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">Requires a Twitch OAuth token (e.g., from twitchapps.com/tmi).</p>
-                </>
-              )}
 
               <button 
                 type="submit"

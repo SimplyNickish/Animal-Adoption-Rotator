@@ -6,11 +6,7 @@ export interface WidgetSettings {
   animalType: string;
   displayDuration: string;
   rotationSize: string;
-  twitchChannel: string;
-  botIntegration: 'none' | 'twitch' | 'streamerbot';
-  twitchBotUsername: string;
-  twitchBotToken: string;
-  streamerbotUrl: string;
+  autoSwapOnChat: boolean;
 }
 
 const DEFAULT_SETTINGS: WidgetSettings = {
@@ -18,11 +14,7 @@ const DEFAULT_SETTINGS: WidgetSettings = {
   animalType: 'both',
   displayDuration: '60',
   rotationSize: '50',
-  twitchChannel: '',
-  botIntegration: 'none',
-  twitchBotUsername: '',
-  twitchBotToken: '',
-  streamerbotUrl: 'ws://127.0.0.1:8080/'
+  autoSwapOnChat: false
 };
 
 export function useWidgetSettings(widgetId: string | null) {

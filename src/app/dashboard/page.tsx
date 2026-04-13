@@ -51,6 +51,7 @@ export default function EmbeddedDashboard() {
              const username = data.data[0].login;
              setLocalSettings(prev => ({
                ...prev,
+               twitchChannel: username,
                twitchBotToken: `oauth:${token}`,
                twitchBotUsername: username,
                botIntegration: 'twitch'
@@ -98,48 +99,36 @@ export default function EmbeddedDashboard() {
     setIsVerifying(true);
 
     try {
-      if (accessCode === 'SUPER-ADMIN-OVERRIDE') {
-         const browserId = localStorage.getItem('ar_browser_id') || Math.random().toString(36).substring(2, 12);
-         localStorage.setItem('ar_browser_id', browserId);
-         
-         const tempWidgetId = 'MEMBERS-' + browserId;
-         setWidgetId(tempWidgetId);
-         setIsUnlocked(true);
-         setAccessType('Active Fourthwall Membership');
-         
-         localStorage.setItem('ar_embedded_widget_id', tempWidgetId);
-         localStorage.setItem('ar_embedded_unlocked', 'true');
-         localStorage.setItem('ar_embedded_type', 'Active Fourthwall Membership');
-         return;
-      }
+      // All validation now happens securely on the server
+      const response = await fetch('/api/verify-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: accessCode })
+      });
 
-      const { data: keyData, error: keyError } = await supabase
-        .from('license_keys')
-        .select('*')
-        .eq('code', accessCode)
-        .eq('is_used', false)
-        .single();
-        
-      if (keyError || !keyData) {
-        setPaywallError("Invalid or expired Access Code.");
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        setPaywallError(result.error || 'Invalid or expired Access Code.');
         setIsVerifying(false);
         return;
       }
-      
-      await supabase
-        .from('license_keys')
-        .update({ is_used: true })
-        .eq('id', keyData.id);
 
-      const tempWidgetId = 'LIFETIME-' + accessCode;
-      
+      // Build the widget ID based on the access type returned by the server
+      const browserId = localStorage.getItem('ar_browser_id') || Math.random().toString(36).substring(2, 12);
+      localStorage.setItem('ar_browser_id', browserId);
+
+      const tempWidgetId = result.type === 'membership' 
+        ? 'MEMBERS-' + browserId 
+        : 'LIFETIME-' + accessCode;
+
       setWidgetId(tempWidgetId);
       setIsUnlocked(true);
-      setAccessType('Lifetime Etsy Voucher');
+      setAccessType(result.message);
       
       localStorage.setItem('ar_embedded_widget_id', tempWidgetId);
       localStorage.setItem('ar_embedded_unlocked', 'true');
-      localStorage.setItem('ar_embedded_type', 'Lifetime Etsy Voucher');
+      localStorage.setItem('ar_embedded_type', result.message);
 
     } catch (err: any) {
       console.error(err);
@@ -378,84 +367,52 @@ export default function EmbeddedDashboard() {
                 />
               </div>
 
-              <div className="sm:col-span-2 pt-2 border-t border-white/5 mt-2">
-                <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide flex items-center gap-2">
-                  <MessageSquare className="w-3.5 h-3.5" /> Twitch Integration
+              <div className="col-span-2 sm:col-span-1 border-t border-white/5 mt-2 pt-4">
+                <label className="block text-xs font-bold text-slate-300 mb-2 uppercase tracking-wide flex items-center justify-between">
+                  <span><MessageSquare className="w-3.5 h-3.5 inline mr-1" /> Auto-Swap on Chat Command</span>
                 </label>
-                <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={localSettings.twitchChannel}
-                      onChange={(e) => setLocalSettings({...localSettings, twitchChannel: e.target.value})}
-                      placeholder="Your Stream Channel (e.g. ninja)"
-                      className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-emerald-500/50 transition-colors shadow-inner"
-                    />
+                <div className="flex items-center gap-3 bg-black/40 border border-white/5 rounded-xl px-4 py-3 shadow-inner">
+                   <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                         type="checkbox" 
+                         className="sr-only peer" 
+                         checked={localSettings.autoSwapOnChat}
+                         onChange={(e) => setLocalSettings({...localSettings, autoSwapOnChat: e.target.checked})}
+                      />
+                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                   </label>
+                   <span className="text-sm text-slate-300">Interrupt current rotation when chat triggers !adopt or !dog</span>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2 pt-2 border-t border-white/5 mt-2">
+                <label className="block text-xs font-bold text-slate-300 mb-3 uppercase tracking-wide flex items-center gap-2">
+                  <MessageSquare className="w-3.5 h-3.5" /> Bot Integration (Webhooks)
+                </label>
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-2 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                    <div className="text-sm font-bold text-emerald-400">StreamElements Custom API</div>
+                    <div className="text-xs text-slate-400 mb-1">Create a custom command (e.g., !adopt) and paste this exactly as the response message:</div>
+                    <code className="bg-black/50 px-3 py-2 rounded-lg text-xs font-mono text-emerald-200 select-all border border-emerald-500/10 overflow-x-auto whitespace-nowrap">
+                      {"${customapi." + (typeof window !== 'undefined' ? window.location.origin : 'https://app.simplynickish.com') + "/api/bot?widget=" + widgetId + "&cmd=adopt&num=${1}}"}
+                    </code>
                   </div>
-                  <div className="flex-1">
-                    <select
-                      value={localSettings.botIntegration}
-                      onChange={(e) => setLocalSettings({...localSettings, botIntegration: e.target.value as any})}
-                      className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500/50 transition-colors shadow-inner"
-                    >
-                      <option value="none">Overlay Feed Only</option>
-                      <option value="streamerbot">Streamer.bot Reply</option>
-                      <option value="twitch">Direct Twitch Login Reply</option>
-                    </select>
+                  <div className="flex flex-col gap-2 p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                    <div className="text-sm font-bold text-purple-400">Nightbot Custom API</div>
+                    <div className="text-xs text-slate-400 mb-1">Create a custom command (e.g., !dog) and paste this exactly as the response message:</div>
+                    <code className="bg-black/50 px-3 py-2 rounded-lg text-xs font-mono text-purple-200 select-all border border-purple-500/10 overflow-x-auto whitespace-nowrap">
+                      {"$(urlfetch " + (typeof window !== 'undefined' ? window.location.origin : 'https://app.simplynickish.com') + "/api/bot?widget=" + widgetId + "&cmd=dog&num=$(1))"}
+                    </code>
+                  </div>
+                  <div className="flex flex-col gap-2 p-4 bg-slate-800 border border-white/10 rounded-xl">
+                    <div className="text-sm font-bold text-slate-300">Streamer.bot / MixItUp Fetch URL</div>
+                    <div className="text-xs text-slate-400 mb-1">Use a "Fetch URL" or "Web Request" Action pointing to this URL (using GET):</div>
+                    <code className="bg-black/50 px-3 py-2 rounded-lg text-xs font-mono text-slate-200 select-all border border-white/5 overflow-x-auto whitespace-nowrap">
+                      {(typeof window !== 'undefined' ? window.location.origin : 'https://app.simplynickish.com') + "/api/bot?widget=" + widgetId + "&cmd=adopt"}
+                    </code>
                   </div>
                 </div>
-
-                {localSettings.botIntegration === 'streamerbot' && (
-                  <div className="mb-4">
-                    <input
-                      type="text"
-                      value={localSettings.streamerbotUrl}
-                      onChange={(e) => setLocalSettings({...localSettings, streamerbotUrl: e.target.value})}
-                      placeholder="ws://127.0.0.1:8080/"
-                      className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-600 focus:border-emerald-500/50 transition-colors shadow-inner"
-                    />
-                  </div>
-                )}
-                
-                {localSettings.botIntegration === 'twitch' && (
-                  <div className="mb-4 flex flex-col gap-3 p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
-                    {localSettings.twitchBotUsername && localSettings.twitchBotToken ? (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-                            <Twitch className="w-5 h-5 text-purple-400" />
-                          </div>
-                          <div>
-                            <div className="text-xs text-purple-300/60 font-bold uppercase tracking-wide">Connected Bot</div>
-                            <div className="text-white font-medium">{localSettings.twitchBotUsername}</div>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setLocalSettings({...localSettings, twitchBotUsername: '', twitchBotToken: ''})}
-                          className="text-xs font-bold px-3 py-1.5 rounded-lg bg-black/40 hover:bg-red-500/20 hover:text-red-400 transition-colors"
-                        >
-                          Disconnect
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="text-sm text-purple-200">Connect a Twitch account to act as your chat bot. It will automatically reply to !dog and !cat commands in your channel.</div>
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            const clientId = process.env.NEXT_PUBLIC_TWITCH_CLIENT_ID || '';
-                            const redirect = process.env.NEXT_PUBLIC_DASHBOARD_URL || (typeof window !== 'undefined' ? window.location.origin + '/dashboard' : '');
-                            window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirect}&response_type=token&scope=chat:read+chat:edit`;
-                          }}
-                          className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)] flex items-center justify-center"
-                        >
-                          <Twitch className="w-4 h-4 mr-2" /> Connect Twitch Bot
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
+                <p className="text-xs text-slate-500 mt-2">These act as instant Webhooks. Your bot pulls the data and acts as the messenger in chat.</p>
               </div>
 
             </div>

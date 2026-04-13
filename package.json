@@ -1,5 +1,5 @@
 {
-  "name": "react-example",
+  "name": "adoption-rotator",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -30,13 +30,11 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.5.0",
-    "tmi.js": "^1.8.5",
     "vite": "^6.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@types/react": "19.2.14",
-    "@types/tmi.js": "^1.8.6",
     "autoprefixer": "^10.4.21",
     "tailwindcss": "^4.1.14",
     "terser": "^5.46.1",
