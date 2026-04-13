@@ -90,8 +90,6 @@ function App() {
     }
   }, [settings, isReady]);
 
-  const twitchClientRef = useRef<tmi.Client | null>(null);
-  const sbWsRef = useRef<WebSocket | null>(null);
   const animalsRef = useRef(animals);
   const currentIndexRef = useRef(currentIndex);
 

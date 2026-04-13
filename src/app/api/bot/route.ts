@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 export async function GET(request: NextRequest) {
@@ -18,10 +18,12 @@ export async function GET(request: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseKey);
   const requestId = Math.random().toString(36).substring(2, 15);
 
-  return new Promise((resolve) => {
+  return new Promise<NextResponse>((resolve) => {
+    // Failsafe timeout: If OBS overlay is perfectly closed or not responding.
+    // Chat bots (StreamElements/Nightbot) usually timeout at 5000ms - 10000ms.
     const timer = setTimeout(() => {
       supabase.removeChannel(responseChannel);
-      resolve(new NextResponse("Widget Error: Make sure your Adoption Rotator is currently active/visible in OBS or Meld Studio!", { status: 200 }));
+      resolve(new NextResponse(`Widget Error: Make sure your Adoption Rotator is currently active/visible in OBS or Meld Studio!`, { status: 200 }));
     }, 4500);
 
     const responseChannel = supabase.channel(`public:bot_responses:${requestId}`)
