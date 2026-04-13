@@ -182,19 +182,19 @@ export async function fetchPetRescue(animalType: string): Promise<Animal[]> {
           ? `${sizeGenderMatch[1].charAt(0).toUpperCase() + sizeGenderMatch[1].slice(1)} ${sizeGenderMatch[2].charAt(0).toUpperCase() + sizeGenderMatch[2].slice(1)}`
           : 'Unknown Age';
         
-        if (nameEl && url && img) {
+        if (name && url && img) {
           animals.push({
             id: `pr-${type}-${i}`,
             type,
             dailyNumber: 0,
-            name: cleanAnimalName(nameEl.textContent?.trim()),
-            breed: breedText || 'Mixed Breed',
+            name: cleanAnimalName(name),
+            breed: breed || 'Mixed Breed',
             age,
             location: location || 'Australia',
             shelter: 'PetRescue',
             url: url,
             pictures: [img],
-            description: `${breedText} in ${location}`
+            description: `${breed} in ${location}`
           });
         }
       });
