@@ -161,8 +161,7 @@ export default function EmbeddedDashboard() {
             
             {/* Iframe Preview Container */}
             <div ref={containerRef} className="relative w-full aspect-video bg-black overflow-hidden group">
-               {/* Loading indicator that hides once iframe loads (managed automatically by iframe visually usually, but we keep it simple here) */}
-               <div className="absolute inset-0 flex items-center justify-center opacity-50 z-0 text-slate-500 font-medium">Loading preview...</div>
+               {/* Iframe loads seamlessly without text underneath */}
                <iframe 
                  src={`${WIDGET_BASE}/widget/${widgetId}?preview=true`}
                  className="absolute inset-0 w-[1920px] h-[1080px] origin-top-left border-0 z-10"

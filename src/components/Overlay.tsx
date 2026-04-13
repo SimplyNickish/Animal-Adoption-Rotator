@@ -374,14 +374,14 @@ function App() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className={`relative w-full h-full flex items-center justify-center rounded-[2.5rem] ${isNaked ? '' : 'shadow-[0_0_80px_rgba(0,0,0,0.5)]'}`}
+            className={`relative flex items-center justify-center rounded-[2.5rem] ${isNaked ? 'w-max h-max' : 'w-full h-full shadow-[0_0_80px_rgba(0,0,0,0.5)]'}`}
           >
           {/* Ambient Volumetric Glow behind the card */}
           {!isNaked && <div className={`absolute -inset-1 bg-gradient-to-br ${theme.glow} rounded-[2.5rem] blur-2xl opacity-80 -z-10`} />}
           {!isNaked && <div className="absolute -inset-4 bg-black/20 rounded-[3rem] blur-xl -z-20" />}
 
           {/* Main Card Glass */}
-          <div className={`relative w-[1700px] h-[950px] flex ${isNaked ? 'bg-transparent items-center justify-center gap-24 px-16' : 'bg-gradient-to-br border border-white/20 ring-1 ring-white/10 shadow-2xl from-slate-800/80 to-zinc-900/80 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden'}`}>
+          <div className={`relative flex ${isNaked && settings.widgetAlignment?.includes('right') ? 'flex-row-reverse' : 'flex-row'} ${isNaked ? 'w-max h-max bg-transparent items-center justify-center gap-12' : 'w-[1700px] h-[950px] bg-gradient-to-br border border-white/20 ring-1 ring-white/10 shadow-2xl from-slate-800/80 to-zinc-900/80 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden'}`}>
             
             {/* Inner Light Reflection (Top Edge) */}
             {!isNaked && <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />}
