@@ -205,17 +205,35 @@ export default function EmbeddedDashboard() {
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500"></div>
 
           <div className="relative z-10">
-            <motion.div 
-              whileHover={{ rotate: 180, scale: 1.1 }}
-              transition={{ duration: 0.5 }}
-              className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-6 border border-emerald-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
-            >
-              <KeyRound className="w-8 h-8 text-emerald-400" />
-            </motion.div>
-            <h2 className="text-2xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">Unlock Rotator Asset</h2>
-            <p className="text-emerald-100/60 mb-6 text-sm leading-relaxed font-medium">
-              Enter your Etsy Voucher Code, or use the Fourthwall Master Member Key to securely authenticate.
-            </p>
+            <div className="flex justify-center mb-6">
+              <motion.div 
+                whileHover={{ rotate: 180, scale: 1.1 }}
+                transition={{ duration: 0.5 }}
+                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/5 flex items-center justify-center border border-emerald-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+              >
+                <KeyRound className="w-8 h-8 text-emerald-400" />
+              </motion.div>
+            </div>
+            
+            <h2 className="text-3xl font-extrabold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-100 to-emerald-200">
+              Widget Authentication
+            </h2>
+            
+            <div className="bg-black/30 border border-white/5 rounded-2xl p-5 mb-7 text-left shadow-inner">
+              <p className="text-emerald-100/80 text-sm leading-relaxed font-medium mb-3">
+                This dashboard generates your unique, live-updating OBS browser source link. Please authenticate your purchase to continue:
+              </p>
+              <ul className="text-emerald-200/60 text-xs space-y-2 font-medium">
+                <li className="flex items-start">
+                  <span className="text-emerald-400 mr-2 mt-0.5">•</span>
+                  <span><strong className="text-emerald-300">Fourthwall Members:</strong> Enter the Master Code provided above. Your widget remains active while your monthly membership is active.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-emerald-400 mr-2 mt-0.5">•</span>
+                  <span><strong className="text-emerald-300">Etsy Lifetime:</strong> Enter your unique Voucher Code from your receipt to permanently lock your license.</span>
+                </li>
+              </ul>
+            </div>
 
             <form onSubmit={verifyLicenseContent} className="space-y-4">
               <div className="relative group/input">
