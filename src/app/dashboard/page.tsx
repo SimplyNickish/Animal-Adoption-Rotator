@@ -310,9 +310,21 @@ export default function EmbeddedDashboard() {
           </button>
         </header>
 
-        <main className="relative z-10 space-y-8">
+        <main className="relative z-10 space-y-6">
           
-          <section className="bg-white/5 p-5 rounded-2xl border border-white/5 shadow-inner">
+          <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 rounded-2xl p-6 shadow-inner shadow-emerald-500/10 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+            <h2 className="text-emerald-400 font-extrabold text-lg mb-3 flex items-center"><Sparkles className="w-5 h-5 mr-2 text-emerald-500" /> Live Adoption Rotator</h2>
+            <p className="text-emerald-100/90 text-sm leading-relaxed mb-4 relative z-10">
+              This widget automatically rotates through real animals looking for their forever homes. Simply paste the <strong className="text-white bg-white/10 px-1.5 py-0.5 rounded font-mono text-xs">Browser Source URL</strong> below into OBS Studio or Meld Studio to display them live on your stream. 
+            </p>
+            <div className="flex flex-wrap gap-4 items-center text-xs text-emerald-200/70 font-medium">
+              <span className="flex items-center bg-black/20 px-2.5 py-1 rounded-lg border border-white/5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mr-1.5" /> Updates in real-time</span>
+              <span className="flex items-center bg-black/20 px-2.5 py-1 rounded-lg border border-white/5"><MessageSquare className="w-3.5 h-3.5 text-emerald-500 mr-1.5" /> Custom bot webhooks</span>
+            </div>
+          </div>
+
+          <section className="bg-white/5 p-5 sm:p-6 rounded-2xl border border-white/5 shadow-inner">
             <h2 className="text-sm font-bold mb-1 text-white uppercase tracking-wider">Browser Source URL</h2>
             <p className="text-slate-400 text-xs font-medium mb-3">Changes below apply instantly. You only need to paste this in OBS once.</p>
             
