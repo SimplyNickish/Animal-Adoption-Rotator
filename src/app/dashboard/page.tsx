@@ -142,10 +142,10 @@ export default function EmbeddedDashboard() {
         </div>
       </div>
 
-      <div className="w-full max-w-6xl grid grid-cols-1 xl:grid-cols-12 gap-8">
+      <div className="w-full max-w-6xl flex flex-col gap-10">
         
-        {/* LEFT COLUMN: PREVIEW & URL (Spans 7 columns on desktop) */}
-        <div className="xl:col-span-7 flex flex-col gap-6">
+        {/* TOP ROW: PREVIEW & URL */}
+        <div className="w-full flex flex-col gap-6">
           
           <section className="bg-slate-900/90 backdrop-blur-3xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
             <div className="bg-slate-950/80 px-5 py-4 border-b border-white/10 flex items-center justify-between shadow-inner">
@@ -209,8 +209,8 @@ export default function EmbeddedDashboard() {
 
         </div>
 
-        {/* RIGHT COLUMN: SETTINGS (Spans 5 columns on desktop) */}
-        <div className="xl:col-span-5">
+        {/* BOTTOM ROW: SETTINGS */}
+        <div className="w-full">
           <motion.div 
             initial={{ opacity: 0, x: 20 }} 
             animate={{ opacity: 1, x: 0 }} 
@@ -233,6 +233,9 @@ export default function EmbeddedDashboard() {
                     placeholder="Zip, City, or State..."
                     className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:border-emerald-500/50 transition-colors shadow-inner text-sm"
                   />
+                  <p className="mt-2 text-[11px] text-slate-500 font-medium tracking-wide">
+                    Leave blank to show animals globally. Filters automatically work for United States & Canada (via RescueGroups) and the UK (via DogsBlog).
+                  </p>
                 </div>
 
                 <div>

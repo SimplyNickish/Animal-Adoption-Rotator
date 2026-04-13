@@ -12,6 +12,11 @@ export interface Animal {
   description?: string;
 }
 
+function cleanAnimalName(rawName: string | undefined | null): string {
+  if (!rawName) return 'Unknown';
+  return rawName.replace(/[0-9#]+/g, '').replace(/[-_\s]+$/, '').trim() || 'Unknown';
+}
+
 export async function fetchRescueGroups(animalType: string, locationFilter: string, rotationSize: number): Promise<Animal[]> {
   let apiFilters: any[] = [];
   if (locationFilter) {
@@ -48,7 +53,7 @@ export async function fetchRescueGroups(animalType: string, locationFilter: stri
 
       if (json.data && Array.isArray(json.data)) {
         json.data.forEach((item: any, index: number) => {
-          const name = item.attributes.name;
+          const name = cleanAnimalName(item.attributes.name);
           const age = item.attributes.ageString || item.attributes.ageGroup || 'Unknown Age';
           const url = item.attributes.url;
 
@@ -177,19 +182,19 @@ export async function fetchPetRescue(animalType: string): Promise<Animal[]> {
           ? `${sizeGenderMatch[1].charAt(0).toUpperCase() + sizeGenderMatch[1].slice(1)} ${sizeGenderMatch[2].charAt(0).toUpperCase() + sizeGenderMatch[2].slice(1)}`
           : 'Unknown Age';
         
-        if (name && url && img) {
+        if (nameEl && url && img) {
           animals.push({
             id: `pr-${type}-${i}`,
             type,
             dailyNumber: 0,
-            name: name || 'Unknown',
-            breed: breed || 'Mixed Breed',
+            name: cleanAnimalName(nameEl.textContent?.trim()),
+            breed: breedText || 'Mixed Breed',
             age,
             location: location || 'Australia',
             shelter: 'PetRescue',
             url: url,
             pictures: [img],
-            description: `${breed} in ${location}`
+            description: `${breedText} in ${location}`
           });
         }
       });
@@ -243,7 +248,7 @@ export async function fetchRssFeed(url: string, sourceName: string, defaultLocat
         id: `${sourceName}-${i}`,
         type,
         dailyNumber: 0,
-        name: item.title || 'Unknown',
+        name: cleanAnimalName(item.title),
         breed: 'Mixed Breed',
         age,
         location: defaultLocation,
