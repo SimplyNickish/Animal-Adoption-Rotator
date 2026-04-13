@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '../../lib/supabase/client';
 import { motion } from 'motion/react';
 import { Settings as SettingsIcon, Sparkles, Loader2, Copy, Save, MessageSquare, CheckCircle2, LayoutTemplate } from 'lucide-react';
@@ -19,6 +19,29 @@ export default function EmbeddedDashboard() {
 
   // Local form state
   const [localSettings, setLocalSettings] = useState<WidgetSettings>(settings);
+
+  // Responsive Iframe scale tracking
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState(0.35);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const updateScale = () => {
+      if (containerRef.current) {
+        setPreviewScale(containerRef.current.clientWidth / 1920);
+      }
+    };
+    
+    // Initial scale
+    updateScale();
+    
+    // Watch for resizes
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(containerRef.current);
+    
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (isReady) {
@@ -124,7 +147,7 @@ export default function EmbeddedDashboard() {
         {/* LEFT COLUMN: PREVIEW & URL (Spans 7 columns on desktop) */}
         <div className="xl:col-span-7 flex flex-col gap-6">
           
-          <section className="bg-slate-900/90 backdrop-blur-3xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[500px]">
+          <section className="bg-slate-900/90 backdrop-blur-3xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
             <div className="bg-slate-950/80 px-5 py-4 border-b border-white/10 flex items-center justify-between shadow-inner">
                <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                  <LayoutTemplate className="w-4 h-4 text-emerald-400" /> Live Canvas Preview
@@ -137,16 +160,14 @@ export default function EmbeddedDashboard() {
             </div>
             
             {/* Iframe Preview Container */}
-            <div className="relative flex-grow bg-black overflow-hidden group">
+            <div ref={containerRef} className="relative w-full aspect-video bg-black overflow-hidden group">
                {/* Loading indicator that hides once iframe loads (managed automatically by iframe visually usually, but we keep it simple here) */}
                <div className="absolute inset-0 flex items-center justify-center opacity-50 z-0 text-slate-500 font-medium">Loading preview...</div>
                <iframe 
                  src={`${WIDGET_BASE}/widget/${widgetId}?preview=true`}
                  className="absolute inset-0 w-[1920px] h-[1080px] origin-top-left border-0 z-10"
                  style={{
-                   transform: 'scale(0.35)', 
-                   width: '1920px', 
-                   height: '1080px' 
+                   transform: `scale(${previewScale})`, 
                  }}
                  sandbox="allow-scripts allow-same-origin"
                  scrolling="no"

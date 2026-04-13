@@ -334,100 +334,7 @@ function App() {
 
   return (
     <div className={`w-screen h-screen flex ${alignmentClass} ${fontClass} p-12 overflow-hidden relative group`}>
-      
-      {/* Settings Button (visible only on hover) */}
-      <button 
-        onClick={() => setIsSettingsOpen(true)}
-        className="absolute top-8 right-8 z-50 p-3 bg-black/50 hover:bg-black/80 text-white/50 hover:text-white rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100"
-      >
-        <Settings className="w-6 h-6" />
-      </button>
 
-      {/* Settings Panel */}
-      <AnimatePresence>
-        {isSettingsOpen && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -20 }}
-            className="absolute top-24 right-8 z-50 w-80 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-white font-bold text-lg">Overlay Settings</h3>
-              <button onClick={() => setIsSettingsOpen(false)} className="text-white/50 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleSaveSettings} className="space-y-4">
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Location Filter
-                </label>
-                <input
-                  type="text"
-                  value={localSettings.location}
-                  onChange={(e) => setLocalSettings({...localSettings, location: e.target.value})}
-                  placeholder="Zip, City, or State..."
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Animal Type
-                </label>
-                <select
-                  value={localSettings.animalType}
-                  onChange={(e) => setLocalSettings({...localSettings, animalType: e.target.value})}
-                  className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                >
-                  <option value="dogs" className="bg-slate-900 text-white">Dogs Only</option>
-                  <option value="cats" className="bg-slate-900 text-white">Cats Only</option>
-                  <option value="both" className="bg-slate-900 text-white">Dogs & Cats</option>
-                </select>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
-                    Duration (s)
-                  </label>
-                  <input
-                    type="number"
-                    min="10"
-                    value={localSettings.displayDuration}
-                    onChange={(e) => setLocalSettings({...localSettings, displayDuration: e.target.value})}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                  />
-                </div>
-                <div className="w-1/2">
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
-                    Rotation Size
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="200"
-                    value={localSettings.rotationSize}
-                    onChange={(e) => setLocalSettings({...localSettings, rotationSize: e.target.value})}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                  />
-                </div>
-              </div>
-
-
-
-              <button 
-                type="submit"
-                className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-2 rounded-xl transition-colors mt-2"
-              >
-                Apply Settings
-              </button>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Preload next animal's images */}
       <div className="absolute w-0 h-0 overflow-hidden opacity-0 pointer-events-none">
@@ -467,7 +374,7 @@ function App() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className={`relative w-full max-w-5xl flex rounded-[2.5rem] ${isNaked ? '' : 'shadow-[0_0_80px_rgba(0,0,0,0.5)]'}`}
+            className={`relative w-full h-full flex items-center justify-center rounded-[2.5rem] ${isNaked ? '' : 'shadow-[0_0_80px_rgba(0,0,0,0.5)]'}`}
           >
           {/* Ambient Volumetric Glow behind the card */}
           {!isNaked && <div className={`absolute -inset-1 bg-gradient-to-br ${theme.glow} rounded-[2.5rem] blur-2xl opacity-80 -z-10`} />}
